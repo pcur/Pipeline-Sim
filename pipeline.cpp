@@ -35,7 +35,7 @@ struct riscvInstr{
 };
 
 struct pipelineState{
-    uint32_t fetchState;
+    std::string fetchState;
     std::string decodeState;
     std::string executeState;
     std::string storeState;
@@ -131,11 +131,41 @@ bool pipelineSimulation::notStalled(){
 }
 
 void pipelineSimulation::fetch(){
-    instruction = instrQ[pc];
-    if(pc > 5) pc = 0;
-    else pc++;
-    state.fetchState = instruction;
-    
+    uint32_t instructiondecode = instrQ[pc] & 0x7F;
+    switch(instructiondecode){
+        case FLD:
+            state.fetchState = "FLD";
+            instruction = instrQ[pc];
+            pc++;
+            break;
+        case FSD:
+            state.fetchState = "FSD";
+            instruction = instrQ[pc];
+            pc++;
+            break;
+        case FADD:
+            state.fetchState = "FADD";
+            instruction = instrQ[pc];
+            pc++;
+            break;
+        case ADDI:
+            state.fetchState = "ADDI";
+            instruction = instrQ[pc];
+            pc++;
+            break;
+        case BNE:
+            state.fetchState = "BNE";
+            instruction = instrQ[pc];
+            pc = 0;
+            break;
+        case NOP:
+            state.fetchState = "NO_OP";
+            pc++;
+            break;
+        default:
+            state.fetchState = "???";
+            break;
+    }    
 }
 
 void pipelineSimulation::decode(){
@@ -147,17 +177,23 @@ void pipelineSimulation::decode(){
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;   
-            state.decodeState    = "RTYPE";
+            state.decodeState    = "FADD";
             //stallTime = 3;
             break;
         case ITYPE:         //ADDI stuff goes here
-                            //No break so falldown into the next case
+            assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
+            assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
+            assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
+            assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
+            state.decodeState    = "ADDI";  
+            //stallTime = 1;
+            break;
         case ITYPE3:        //FLD stuff goes here
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
-            state.decodeState    = "ITYPE";  
+            state.decodeState    = "FLD";  
             //stallTime = 1;
             break;
         case STYPE:         //FSD stuff goes here
@@ -165,7 +201,7 @@ void pipelineSimulation::decode(){
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
-            state.decodeState    = "STYPE";
+            state.decodeState    = "FSD";
             //stallTime = 2;
             break;
         case BTYPE:         //BNE goes here
@@ -173,7 +209,7 @@ void pipelineSimulation::decode(){
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
-            state.decodeState    = "BTYPE";
+            state.decodeState    = "BNE";
             break;
         case NOP:
             state.decodeState    = "NO_OP";
@@ -214,12 +250,12 @@ void pipelineSimulation::execute(){
                 state.executeState = "FSD";
                 break;
             case ADDI:
-                x1 = x1 - 1;
+                x1 = x1 - 8;
                 state.executeState = "ADDI";
                 break;
             case BNE:
                 if(x1 != x2){
-                    pc = assemblyCode.imm;
+                    //pc = assemblyCode.imm;
                 }   
                 else{
                     halt();
@@ -239,17 +275,13 @@ void pipelineSimulation::store(){
 }
 
 void pipelineSimulation::halt(){
-    printf("Halting simulation\n");
+    //printf("Halting simulation\n");
     while(!eventQueue.empty()){
         event * nextEvent = eventQueue.top();
         eventQueue.pop();
         delete nextEvent;
     }
     pc = 5;
-    state.fetchState = 0;
-    state.decodeState = "HALTED";
-    state.executeState = "HALTED";
-    state.storeState = "HALTED";
     halted = true;
 }
 
@@ -287,12 +319,13 @@ void simulation::run(){
         while(eventQueue.top()->time <= clk + 1) {
             event * nextEvent = eventQueue.top();
             nextEvent->processEvent();
+            if(halted) break;
             eventQueue.pop();
             delete nextEvent;
         }
         if(debug == 1){
             printf("Clock Cycle: %04.1f", clk);
-            printf(" Fetch: %#010x",state.fetchState);
+            std::cout << " Fetch: " << state.fetchState;
             std::cout << " Decode: " << state.decodeState << " Execute: " << state.executeState;
             std::cout << " Store: " << state.storeState << " Value in x1: " << pipelineSimulation.x1 << std::endl;
         }
@@ -304,7 +337,18 @@ void simulation::run(){
                 queueCopy.pop();
             }
         }
-        if(halted) break;
+        if(halted){
+            state.fetchState = "HALTED";
+            state.decodeState = "HALTED";
+            state.executeState = "HALTED";
+            state.storeState = "HALTED";
+            printf("Halting simulation\n");
+            printf("Clock Cycle: %04.1f", clk);
+            std::cout << " Fetch: " << state.fetchState;
+            std::cout << " Decode: " << state.decodeState << " Execute: " << state.executeState;
+            std::cout << " Store: " << state.storeState << " Value in x1: " << pipelineSimulation.x1 << std::endl;
+            return;
+        }
         else{
             if(pipelineSimulation.stallTime > 0) pipelineSimulation.pipelineBusy = 1;
             if(pipelineSimulation.notStalled()){
