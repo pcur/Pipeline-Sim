@@ -183,8 +183,8 @@ void pipelineSimulation::decode(){
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
             if(assemblyCode.funct3 == 0 || assemblyCode.funct3 == 5)  {
-                if(assemblyCode.funct7 == 64){
-                    assemblyCode.alucode = assemblyCode.funct3 * -1;
+                if(assemblyCode.funct7 == 32){
+                    assemblyCode.alucode = (assemblyCode.funct3 * -1) - 1;
                 }
                 else assemblyCode.alucode = assemblyCode.funct3;
             } 
