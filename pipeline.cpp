@@ -15,6 +15,7 @@
 #define RTYPE   0b1010011
 #define ITYPE   0b0010011
 #define ITYPE3  0b0000011
+#define ITYPE3  0b0000011
 #define BTYPE   0b1100011
 #define STYPE   0b0100111
 #define UTYPE   0b0110111
@@ -181,7 +182,7 @@ void pipelineSimulation::fetch(){
 void pipelineSimulation::decode(){
     assemblyCode.opcode = instruction & 0x7F;
     switch(assemblyCode.opcode){
-        case RTYPE:         //FADD.D stuff goes here
+        case RTYPE:
             assemblyCode.funct7  = (instruction & 0xFE000000) >> 25;
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
@@ -194,24 +195,43 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.rw_enable = 0;
             state.decodeState    = "RTYPE";
-            //stallTime = 3;
             break;
+
         case ITYPE:         //ADDI stuff goes here
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
-            state.decodeState    = "ADDI";  
-            //stallTime = 1;
+            assemblyCode.funct7 = 0;
+
+            if(assemblyCode.funct3 == 5){
+                assemblyCode.funct7 = assemblyCode.imm & 0xFE0;
+            }  
+            assemblyCode.alucode = (assemblyCode.funct7 << 3) | assemblyCode.funct3;
+
+            assemblyCode.wb_enable = 1;
+            assemblyCode.imm_sel = 1;
+            assemblyCode.store_sel = 0;
+            assemblyCode.mem_load_sel = 0;
+            state.decodeState    = "ITYPE";
             break;
-        case ITYPE3:        //FLD stuff goes here
+
+        case ITYPE3: // I type, loads
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
-            state.decodeState    = "FLD";  
-            //stallTime = 1;
+            assemblyCode.funct7 = 0;
+
+            assemblyCode.alucode = 0; //add
+            assemblyCode.wb_enable = 1;
+            assemblyCode.imm_sel = 1;
+            assemblyCode.store_sel = 1;
+            assemblyCode.mem_load_sel = 1;
+            assemblyCode.rw_enable = 1;
+            state.decodeState    = "ITYPE"; 
             break;
+
         case STYPE:         //FSD stuff goes here
             assemblyCode.imm     = ((instruction & 0xFE000000) >> 25) + ((instruction & 0x00000F80) >> 7);
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
@@ -225,8 +245,8 @@ void pipelineSimulation::decode(){
             assemblyCode.bit_len = 8 << assemblyCode.funct3;
             assemblyCode.rw_enable = 1;
             state.decodeState    = "STYPE";
-            //stallTime = 2;
             break;
+
         case BTYPE:         //BNE goes here
             assemblyCode.imm     = decodeBTypeImm(instruction);
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
@@ -234,22 +254,27 @@ void pipelineSimulation::decode(){
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             state.decodeState    = "BNE";
             break;
+
         case JTYPE:
             state.decodeState    = "JTYPE";
             break;
+
         case UTYPE:
             state.decodeState    = "UTYPE";
             break;
+
         case UTYPE2:
             state.decodeState    = "UTYPE";
-            break;   
+            break;
+
         case NOP:
             state.decodeState    = "NO_OP";
             break;
+
         default:
             state.decodeState    = "???";
             break;
-        
+
     }
 }
 
