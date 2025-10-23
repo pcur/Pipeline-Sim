@@ -14,7 +14,7 @@
 
 #define RTYPE   0b1010011
 #define ITYPE   0b0010011
-#define ITYPE3  0b0000111
+#define ITYPE3  0b0000011
 #define BTYPE   0b1100011
 #define STYPE   0b0100111
 
@@ -37,6 +37,8 @@ struct riscvInstr{
     bool imm_sel;
     bool store_sel;
     bool mem_load_sel;
+    int bit_len;
+    bool rw_enable;
 };
 
 struct pipelineState{
@@ -203,8 +205,8 @@ void pipelineSimulation::decode(){
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
-            assemblyCode.funct7 = 0x000;
-            
+            assemblyCode.funct7 = 0;
+
             if(assemblyCode.funct3 == 5){
                 assemblyCode.funct7 = assemblyCode.imm & 0xFE0;
             }  
@@ -215,13 +217,22 @@ void pipelineSimulation::decode(){
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
             state.decodeState    = "ITYPE";
+            break;
 
-        case ITYPE3:        //FLD stuff goes here
+        case ITYPE3: // I type, loads
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
-            state.decodeState    = "FLD";  
+            assemblyCode.funct7 = 0;
+
+            assemblyCode.alucode = 0; //add
+            assemblyCode.wb_enable = 1;
+            assemblyCode.imm_sel = 1;
+            assemblyCode.store_sel = 1;
+            assemblyCode.mem_load_sel = 1;
+            assemblyCode.rw_enable = 1;
+            state.decodeState    = "ITYPE"; 
             break;
 
         case STYPE:         //FSD stuff goes here
