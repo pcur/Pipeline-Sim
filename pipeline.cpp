@@ -29,20 +29,24 @@ bool halted;
 int debug;
 
 struct riscvInstr{
+    // RISC-V instruction fields
+    uint32_t opcode;
     int funct3;
     int funct7;
     int rs1;
     int rs2;
     int imm;
     int rd;
-    uint32_t opcode;
+    // ALU control
     int alucode;
-    bool wb_enable;
+    bool pc_enable;
     bool imm_sel;
+    // Memory mux control
     bool store_sel;
     bool mem_load_sel;
-    bool rw_enable;
     int bit_len;
+    bool rw_enable;
+    bool wb_enable;
 };
 
 struct pipelineState{
@@ -184,93 +188,148 @@ void pipelineSimulation::decode(){
 
     switch(assemblyCode.opcode){
         case RTYPE: // register arithmetic
+            state.decodeState    = "RTYPE";
+            // R-type instruction decoding
             assemblyCode.funct7  = (instruction & 0xFE000000) >> 25;
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
+            // ALU control
             assemblyCode.alucode = (assemblyCode.funct7 << 3) + assemblyCode.funct3;
-            assemblyCode.wb_enable = 1;
+            assemblyCode.pc_enable = 0;
             assemblyCode.imm_sel = 0;
+            // Memory mux control
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
+            assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
-            state.decodeState    = "RTYPE";
             break;
 
         case ITYPE: // immediate arithmetic
+            state.decodeState    = "ITYPE";
+            // I-type instruction decoding
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
             assemblyCode.funct7 = 0;
-
             if(assemblyCode.funct3 == 5){
                 assemblyCode.funct7 = assemblyCode.imm & 0xFE0;
             }  
+            // ALU control
             assemblyCode.alucode = (assemblyCode.funct7 << 3) | assemblyCode.funct3;
-            assemblyCode.wb_enable = 1;
+            assemblyCode.pc_enable = 0;
             assemblyCode.imm_sel = 1;
+            // Memory mux control
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
-            state.decodeState    = "ITYPE";
+            assemblyCode.wb_enable = 1;
+            assemblyCode.rw_enable = 0;
             break;
 
         case ITYPE3: // I type, loads
+            state.decodeState    = "ITYPE"; 
+            // I-type instruction decoding
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
             assemblyCode.funct7 = 0;
-            assemblyCode.alucode = 0; //add
-            assemblyCode.wb_enable = 1;
+            // ALU control
+            assemblyCode.alucode = 0; // add
+            assemblyCode.pc_enable = 0;
             assemblyCode.imm_sel = 1;
+            // Memory mux control
             assemblyCode.store_sel = 1;
             assemblyCode.mem_load_sel = 1;
+            assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 1;
-            state.decodeState    = "ITYPE"; 
             break;
 
         case STYPE: // stores
+            state.decodeState    = "STYPE";
+            // S-type instruction decoding
             assemblyCode.imm     = ((instruction & 0xFE000000) >> 25) + ((instruction & 0x00000F80) >> 7);
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
-            assemblyCode.alucode = 0;
-            assemblyCode.wb_enable = 0;
+            // ALU control
+            assemblyCode.alucode = 0; // add
+            assemblyCode.pc_enable = 0;
             assemblyCode.imm_sel = 1;
+            // Memory mux control
             assemblyCode.store_sel = 1;
-            assemblyCode.mem_load_sel = 0;
-            assemblyCode.bit_len = 8 << assemblyCode.funct3;
+            assemblyCode.mem_load_sel = 1;
+            assemblyCode.wb_enable = 0;
             assemblyCode.rw_enable = 1;
-            state.decodeState    = "STYPE";
+            // Size control
+            assemblyCode.bit_len = 8 << assemblyCode.funct3;
             break;
 
         case BTYPE: // branching
+            state.decodeState    = "BNE";
+            // B-type instruction decoding
             assemblyCode.imm     = decodeBTypeImm(instruction);
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
-            assemblyCode.alucode = assemblyCode.funct3 << 3; //Need some way to keep it unique from other op codes            
+            // ALU control
+            assemblyCode.alucode = assemblyCode.funct3 << 3; //TODO: Need some way to keep it unique from other op codes            
+            assemblyCode.pc_enable = 0;
             assemblyCode.imm_sel = 0;
-            assemblyCode.wb_enable = 0;
+            // Memory mux control
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
+            assemblyCode.wb_enable = 0;
             assemblyCode.rw_enable = 0;
-            state.decodeState    = "BNE";
-
             break;
 
         case JTYPE: // jal, jalr
             state.decodeState    = "JTYPE";
+            // J-type instruction decoding
+
+            // ALU control
+            assemblyCode.alucode = 
+            assemblyCode.pc_enable = 0;
+            assemblyCode.imm_sel = 0;
+            // Memory mux control
+            assemblyCode.store_sel = 0;
+            assemblyCode.mem_load_sel = 0;
+            assemblyCode.wb_enable = 0;
+            assemblyCode.rw_enable = 0;
             break;
 
-        case UTYPE: // lui
-            state.decodeState    = "UTYPE";
+        case UTYPE: // lui - load upper immediate
+            state.decodeState   = "UTYPE";
+            // U-type instruction decoding
+            assemblyCode.imm    = (instruction & 0xFFFFF000) >> 12;
+            assemblyCode.rd     = (instruction & 0x00000F80) >> 7;
+            // ALU control
+            assemblyCode.alucode = 0x11111111; //TODO: keep the same
+            assemblyCode.pc_enable = 0;
+            assemblyCode.imm_sel = 1;
+            // Memory mux control
+            assemblyCode.store_sel = 1;
+            assemblyCode.mem_load_sel = 0;
+            assemblyCode.wb_enable = 1;
+            assemblyCode.rw_enable = 0;
             break;
 
-        case UTYPE2: // auipc
+        case UTYPE2: // auipc - add upper immediate to pc
             state.decodeState    = "UTYPE";
+            // U-type instruction decoding
+            assemblyCode.imm    = (instruction & 0xFFFFF000) >> 12;
+            assemblyCode.rd     = (instruction & 0x00000F80) >> 7;
+            // ALU control
+            assemblyCode.alucode = 0; //add
+            assemblyCode.pc_enable = 1;
+            assemblyCode.imm_sel = 1;
+            // Memory mux control
+            assemblyCode.store_sel = 1;
+            assemblyCode.mem_load_sel = 0;
+            assemblyCode.wb_enable = 1;
+            assemblyCode.rw_enable = 0;
             break;
 
         case NOP: // no op
@@ -451,6 +510,6 @@ int main(){
         std::cout << instrQ[i] << std::endl;
     }
     pipelineSimulation.run();
-    
+
     return 0;
 }
