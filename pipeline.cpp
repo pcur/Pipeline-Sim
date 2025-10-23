@@ -181,8 +181,9 @@ void pipelineSimulation::fetch(){
 
 void pipelineSimulation::decode(){
     assemblyCode.opcode = instruction & 0x7F;
+
     switch(assemblyCode.opcode){
-        case RTYPE:
+        case RTYPE: // register arithmetic
             assemblyCode.funct7  = (instruction & 0xFE000000) >> 25;
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
@@ -197,7 +198,7 @@ void pipelineSimulation::decode(){
             state.decodeState    = "RTYPE";
             break;
 
-        case ITYPE:         //ADDI stuff goes here
+        case ITYPE: // immediate arithmetic
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
@@ -208,7 +209,6 @@ void pipelineSimulation::decode(){
                 assemblyCode.funct7 = assemblyCode.imm & 0xFE0;
             }  
             assemblyCode.alucode = (assemblyCode.funct7 << 3) | assemblyCode.funct3;
-
             assemblyCode.wb_enable = 1;
             assemblyCode.imm_sel = 1;
             assemblyCode.store_sel = 0;
@@ -222,7 +222,6 @@ void pipelineSimulation::decode(){
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
             assemblyCode.funct7 = 0;
-
             assemblyCode.alucode = 0; //add
             assemblyCode.wb_enable = 1;
             assemblyCode.imm_sel = 1;
@@ -232,7 +231,7 @@ void pipelineSimulation::decode(){
             state.decodeState    = "ITYPE"; 
             break;
 
-        case STYPE:         //FSD stuff goes here
+        case STYPE: // stores
             assemblyCode.imm     = ((instruction & 0xFE000000) >> 25) + ((instruction & 0x00000F80) >> 7);
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
@@ -247,7 +246,7 @@ void pipelineSimulation::decode(){
             state.decodeState    = "STYPE";
             break;
 
-        case BTYPE:         //BNE goes here
+        case BTYPE: // branching
             assemblyCode.imm     = decodeBTypeImm(instruction);
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
@@ -259,21 +258,22 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.rw_enable = 0;
             state.decodeState    = "BNE";
+
             break;
 
-        case JTYPE:
+        case JTYPE: // jal, jalr
             state.decodeState    = "JTYPE";
             break;
 
-        case UTYPE:
+        case UTYPE: // lui
             state.decodeState    = "UTYPE";
             break;
 
-        case UTYPE2:
+        case UTYPE2: // auipc
             state.decodeState    = "UTYPE";
             break;
 
-        case NOP:
+        case NOP: // no op
             state.decodeState    = "NO_OP";
             break;
 
@@ -288,34 +288,33 @@ void pipelineSimulation::execute(){
     state.executeState = "NO_OP";
     if(pipelineBusy) {
         state.executeState = "STALL";
-
     }
     else {
         switch(assemblyCode.opcode){
             case FLD:
-
                 //Stall time of 1 cycle
-                //stallTime = 1;
                 f0 = array[x1];
                 state.executeState = "FLD";
                 break;
+
             case FADD:
                 //Stall time of 3 cycles
                 stallTime = 2;
                 f4 = f0 + f2;
                 state.executeState = "FADD";
                 break;
-            case FSD:
 
+            case FSD:
                 //Stall time of 2 cycles
-                //stallTime = 2;
                 array[x1] = f4;
                 state.executeState = "FSD";
                 break;
+
             case ADDI:
                 x1 = x1 - 8;
                 state.executeState = "ADDI";
                 break;
+
             case BNE:
                 if(x1 != x2){
                     //pc = assemblyCode.imm;
@@ -327,7 +326,7 @@ void pipelineSimulation::execute(){
                 break;
             default:
                 break;
-        
+
         }
     }
 }
@@ -338,7 +337,6 @@ void pipelineSimulation::store(){
 }
 
 void pipelineSimulation::halt(){
-    //printf("Halting simulation\n");
     while(!eventQueue.empty()){
         event * nextEvent = eventQueue.top();
         eventQueue.pop();
@@ -352,32 +350,29 @@ class fetchEvent : public event {
     public:
         fetchEvent(float t) : event(t, "fetch"){}
         virtual void processEvent();
-        
 };
 
 class decodeEvent : public event {
     public:
         decodeEvent(float t) : event(t, "decode"){}
         virtual void processEvent();
-
 };
 
 class executeEvent : public event {
     public:
         executeEvent(float t) : event(t, "execute"){}
         virtual void processEvent();
-        
 };
 
 class storeEvent : public event {
     public:
         storeEvent(float t) : event(t, "store"){}
         virtual void processEvent();
-        
 };
 
 void simulation::run(){
     pipelineSimulation.scheduleEvent(new fetchEvent(clk));
+
     while(!eventQueue.empty()){ //clock cycle loop
         while(eventQueue.top()->time <= clk + 1) {
             event * nextEvent = eventQueue.top();
@@ -430,19 +425,16 @@ void simulation::run(){
 
 void fetchEvent::processEvent(){
     pipelineSimulation.fetch();
-    //printf("The time is: %f and this is fetch\n", pipelineSimulation.stallTime);
     pipelineSimulation.scheduleEvent(new decodeEvent(pipelineSimulation.clk + 1.3 + pipelineSimulation.stallTime));
 }
 
 void decodeEvent::processEvent(){
     pipelineSimulation.decode();
-    //printf("The time is: %f and this is decode\n", pipelineSimulation.stallTime);
     pipelineSimulation.scheduleEvent(new executeEvent(pipelineSimulation.clk + 1.2 + pipelineSimulation.stallTime));
 }
 
 void executeEvent::processEvent(){
     pipelineSimulation.execute();
-    //printf("The time is: %f and this is execute\n", time);
     pipelineSimulation.scheduleEvent(new storeEvent(pipelineSimulation.clk + 1.1));
 }
 void storeEvent::processEvent(){
@@ -454,8 +446,11 @@ int main(){
     halted = 0;
     std::cout << "Pipeline Simulation, assignment 2\n";
     fill_queue("instructions.txt", instrQ, 9);
-    for(int i = 0; i < 8; i++)
+
+    for(int i = 0; i < 8; i++){
         std::cout << instrQ[i] << std::endl;
+    }
     pipelineSimulation.run();
+    
     return 0;
 }
