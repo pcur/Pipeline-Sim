@@ -32,6 +32,11 @@ struct riscvInstr{
     int imm;
     int rd;
     uint32_t opcode;
+    int alucode;
+    bool wb_enable;
+    bool imm_sel;
+    bool store_sel;
+    bool mem_load_sel;
 };
 
 struct pipelineState{
@@ -155,7 +160,7 @@ void pipelineSimulation::fetch(){
             break;
         case BNE:
             state.fetchState = "BNE";
-            instruction = instrQ[pc];
+            instruction = instRrQ[pc];
             pc = 0;
             break;
         case NOP:
@@ -176,8 +181,19 @@ void pipelineSimulation::decode(){
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
-            assemblyCode.rd      = (instruction & 0x00000F80) >> 7;   
-            state.decodeState    = "FADD";
+            assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
+            if(assemblyCode.funct3 == 0 || assemblyCode.funct3 == 5)  {
+                if(assemblyCode.funct7 == 64){
+                    assemblyCode.alucode = assemblyCode.funct3 * -1;
+                }
+                else assemblyCode.alucode = assemblyCode.funct3;
+            } 
+            else assemblyCode.alucode = assemblyCode.funct3;
+            assemblyCode.wb_enable = 1;
+            assemblyCode.imm_sel = 0;
+            assemblyCode.store_sel = 0;
+            assemblyCode.mem_load_sel = 0;
+            state.decodeState    = "RTYPE";
             //stallTime = 3;
             break;
         case ITYPE:         //ADDI stuff goes here
