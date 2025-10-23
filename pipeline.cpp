@@ -14,9 +14,12 @@
 
 #define RTYPE   0b1010011
 #define ITYPE   0b0010011
-#define ITYPE3  0b0000111
+#define ITYPE3  0b0000011
 #define BTYPE   0b1100011
 #define STYPE   0b0100111
+#define UTYPE   0b0110111
+#define UTYPE2  0b0010111
+#define JTYPE   0b1101111
 
 #define NOP     0b0000000
 unsigned int instrQ[10];
@@ -37,6 +40,8 @@ struct riscvInstr{
     bool imm_sel;
     bool store_sel;
     bool mem_load_sel;
+    bool rw_enable;
+    int bit_len;
 };
 
 struct pipelineState{
@@ -182,17 +187,12 @@ void pipelineSimulation::decode(){
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
-            if(assemblyCode.funct3 == 0 || assemblyCode.funct3 == 5)  {
-                if(assemblyCode.funct7 == 32){
-                    assemblyCode.alucode = (assemblyCode.funct3 * -1) - 1;
-                }
-                else assemblyCode.alucode = assemblyCode.funct3;
-            } 
-            else assemblyCode.alucode = assemblyCode.funct3;
+            assemblyCode.alucode = (assemblyCode.funct7 << 3) + assemblyCode.funct3;
             assemblyCode.wb_enable = 1;
             assemblyCode.imm_sel = 0;
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
+            assemblyCode.rw_enable = 0;
             state.decodeState    = "RTYPE";
             //stallTime = 3;
             break;
@@ -217,7 +217,14 @@ void pipelineSimulation::decode(){
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
-            state.decodeState    = "FSD";
+            assemblyCode.alucode = 0;
+            assemblyCode.wb_enable = 0;
+            assemblyCode.imm_sel = 1;
+            assemblyCode.store_sel = 1;
+            assemblyCode.mem_load_sel = 0;
+            assemblyCode.bit_len = 8 << assemblyCode.funct3;
+            assemblyCode.rw_enable = 1;
+            state.decodeState    = "STYPE";
             //stallTime = 2;
             break;
         case BTYPE:         //BNE goes here
@@ -227,6 +234,15 @@ void pipelineSimulation::decode(){
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             state.decodeState    = "BNE";
             break;
+        case JTYPE:
+            state.decodeState    = "JTYPE";
+            break;
+        case UTYPE:
+            state.decodeState    = "UTYPE";
+            break;
+        case UTYPE2:
+            state.decodeState    = "UTYPE";
+            break;   
         case NOP:
             state.decodeState    = "NO_OP";
             break;
