@@ -166,7 +166,7 @@ void pipelineSimulation::fetch(){
             break;
         case BNE:
             state.fetchState = "BNE";
-            instruction = instRrQ[pc];
+            instruction = instrQ[pc];
             pc = 0;
             break;
         case NOP:
@@ -252,6 +252,12 @@ void pipelineSimulation::decode(){
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
+            assemblyCode.alucode = assemblyCode.funct3 << 3; //Need some way to keep it unique from other op codes            
+            assemblyCode.imm_sel = 0;
+            assemblyCode.wb_enable = 0;
+            assemblyCode.store_sel = 0;
+            assemblyCode.mem_load_sel = 0;
+            assemblyCode.rw_enable = 0;
             state.decodeState    = "BNE";
             break;
 
