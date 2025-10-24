@@ -287,8 +287,13 @@ void pipelineSimulation::decode(){
 
         case JTYPE: // jal, jalr
             state.decodeState    = "JTYPE";
-            // J-type instruction decoding
-
+            // J-type instruction decoding (same as I-type e coding)
+            assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
+            assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
+            assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
+            assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
+            assemblyCode.funct7 = 0;
+            
             // ALU control
             assemblyCode.alucode = 
             assemblyCode.pc_enable = 0;
