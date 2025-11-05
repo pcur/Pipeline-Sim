@@ -12,15 +12,16 @@
 #define ADDI    0b0010011
 #define BNE     0b1100011
 
-#define RTYPE   0b1010011
+#define RTYPE   0b0110011
+#define RTYPE2  0b1010011
 #define ITYPE   0b0010011
-#define ITYPE3  0b0000011
 #define ITYPE3  0b0000011
 #define BTYPE   0b1100011
 #define STYPE   0b0100111
 #define UTYPE   0b0110111
 #define UTYPE2  0b0010111
 #define JTYPE   0b1101111
+#define JTYPE2  0b1100111
 
 #define NOP     0b0000000
 unsigned int instrQ[10];
@@ -81,6 +82,26 @@ int32_t decodeBTypeImm(uint32_t instr) {
 
     // Sign extend 13-bit immediate
     return (int32_t)((imm ^ 0x1000) - 0x1000);
+}
+
+int32_t decodeJALImmediate(uint32_t instruction) {
+    // Extract relevant bits
+    int32_t imm20   = (instruction >> 31) & 0x1;       // bit 31
+    int32_t imm10_1 = (instruction >> 21) & 0x3FF;     // bits 30–21
+    int32_t imm11   = (instruction >> 20) & 0x1;       // bit 20
+    int32_t imm19_12 = (instruction >> 12) & 0xFF;     // bits 19–12
+
+    // Combine them into a 21-bit immediate (note positions)
+    int32_t imm = (imm20 << 20) |
+                  (imm19_12 << 12) |
+                  (imm11 << 11) |
+                  (imm10_1 << 1);
+
+    // Sign-extend to 32 bits (if imm20 is set, negative offset)
+    if (imm20)
+        imm |= 0xFFF00000;
+
+    return imm;
 }
 
 class event {
@@ -147,40 +168,25 @@ bool pipelineSimulation::notStalled(){
 
 void pipelineSimulation::fetch(){
     uint32_t instructiondecode = instrQ[pc] & 0x7F;
-    switch(instructiondecode){
-        case FLD:
-            state.fetchState = "FLD";
-            instruction = instrQ[pc];
-            pc++;
+    instruction = instrQ[pc];
+    switch(pc){
+        case 0:
+            state.fetchState    = "XOR";
             break;
-        case FSD:
-            state.fetchState = "FSD";
-            instruction = instrQ[pc];
-            pc++;
+        case 1:
+            state.fetchState    = "DIVU";
             break;
-        case FADD:
-            state.fetchState = "FADD";
-            instruction = instrQ[pc];
-            pc++;
+        case 2:
+            state.fetchState    = "FSQRT";
             break;
-        case ADDI:
-            state.fetchState = "ADDI";
-            instruction = instrQ[pc];
-            pc++;
-            break;
-        case BNE:
-            state.fetchState = "BNE";
-            instruction = instrQ[pc];
-            pc = 0;
-            break;
-        case NOP:
-            state.fetchState = "NO_OP";
-            pc++;
+        case 3:
+            state.fetchState    = "BNE";
             break;
         default:
-            state.fetchState = "???";
+            state.fetchState    = "NO_OP";
             break;
-    }    
+    }
+    pc++;
 }
 
 void pipelineSimulation::decode(){
@@ -189,6 +195,25 @@ void pipelineSimulation::decode(){
     switch(assemblyCode.opcode){
         case RTYPE: // register arithmetic
             state.decodeState    = "RTYPE";
+            // R-type instruction decoding
+            assemblyCode.funct7  = (instruction & 0xFE000000) >> 25;
+            assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
+            assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
+            assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
+            assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
+            // ALU control
+            assemblyCode.alucode = (assemblyCode.funct7 << 3) + assemblyCode.funct3;
+            assemblyCode.pc_enable = 0;
+            assemblyCode.imm_sel = 0;
+            // Memory mux control
+            assemblyCode.store_sel = 0;
+            assemblyCode.mem_load_sel = 0;
+            assemblyCode.wb_enable = 1;
+            assemblyCode.rw_enable = 0;
+            break;
+
+        case RTYPE2: // register arithmetic
+            state.decodeState    = "RTYPE-F";
             // R-type instruction decoding
             assemblyCode.funct7  = (instruction & 0xFE000000) >> 25;
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
@@ -229,7 +254,7 @@ void pipelineSimulation::decode(){
             break;
 
         case ITYPE3: // I type, loads
-            state.decodeState    = "ITYPE"; 
+            state.decodeState    = "ITYPE-L"; 
             // I-type instruction decoding
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
@@ -268,7 +293,7 @@ void pipelineSimulation::decode(){
             break;
 
         case BTYPE: // branching
-            state.decodeState    = "BNE";
+            state.decodeState    = "BTYPE";
             // B-type instruction decoding
             assemblyCode.imm     = decodeBTypeImm(instruction);
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
@@ -285,21 +310,43 @@ void pipelineSimulation::decode(){
             assemblyCode.rw_enable = 0;
             break;
 
-        case JTYPE: // jal, jalr
+        case JTYPE: // jal
             state.decodeState    = "JTYPE";
             // J-type instruction decoding
-
+            assemblyCode.imm     = decodeJALImmediate(instruction);
+            assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
+            assemblyCode.funct3  = 0;
+            assemblyCode.funct7  = 0;
             // ALU control
-            assemblyCode.alucode = 
-            assemblyCode.pc_enable = 0;
+            assemblyCode.alucode = 0;
+            assemblyCode.pc_enable = 1;
             assemblyCode.imm_sel = 0;
             // Memory mux control
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
-            assemblyCode.wb_enable = 0;
+            assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             break;
-
+        
+        case JTYPE2: // jalr
+            state.decodeState    = "JTYPE";
+            // J-type instruction decoding
+            assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
+            assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
+            assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
+            assemblyCode.funct3  = 0;
+            assemblyCode.funct7  = 0;
+            // ALU control
+            assemblyCode.alucode = 0;
+            assemblyCode.pc_enable = 1;
+            assemblyCode.imm_sel = 0;
+            // Memory mux control
+            assemblyCode.store_sel = 0;
+            assemblyCode.mem_load_sel = 0;
+            assemblyCode.wb_enable = 1;
+            assemblyCode.rw_enable = 0;
+            break;
+            
         case UTYPE: // lui - load upper immediate
             state.decodeState   = "UTYPE";
             // U-type instruction decoding
@@ -360,7 +407,7 @@ void pipelineSimulation::execute(){
                 //Stall time of 3 cycles
                 stallTime = 2;
                 f4 = f0 + f2;
-                state.executeState = "FADD";
+                state.executeState = "FSQRT";
                 break;
 
             case FSD:
@@ -454,6 +501,7 @@ void simulation::run(){
                 queueCopy.pop();
             }
         }
+        if(clk == 4) halted = 1;
         if(halted){
             state.fetchState = "HALTED";
             state.decodeState = "HALTED";
