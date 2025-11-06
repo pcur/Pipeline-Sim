@@ -5,6 +5,7 @@
 #include <random>
 #include <bitset>
 #include <cstdint>
+#include "alu.h"
 
 #define FLD     0b0000111
 #define FADD    0b1010011
@@ -167,25 +168,7 @@ bool pipelineSimulation::notStalled(){
 }
 
 void pipelineSimulation::fetch(){
-    uint32_t instructiondecode = instrQ[pc] & 0x7F;
     instruction = instrQ[pc];
-    switch(pc){
-        case 0:
-            state.fetchState    = "XOR";
-            break;
-        case 1:
-            state.fetchState    = "DIVU";
-            break;
-        case 2:
-            state.fetchState    = "FSQRT";
-            break;
-        case 3:
-            state.fetchState    = "BNE";
-            break;
-        default:
-            state.fetchState    = "NO_OP";
-            break;
-    }
     pc++;
 }
 
