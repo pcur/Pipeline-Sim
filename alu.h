@@ -1,3 +1,5 @@
+#include <cstdint>
+
 // For the int alu
 #define ADD     0b0000000000
 #define SUB     0b0100000000

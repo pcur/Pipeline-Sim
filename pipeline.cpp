@@ -51,6 +51,14 @@ struct riscvInstr{
     bool wb_enable;
 };
 
+struct executeData{
+    int alu_val1;
+    int alu_val2;
+    float alu_float1;
+    float alu_float2;
+    int wb_val;
+};
+
 struct pipelineState{
     std::string fetchState;
     std::string decodeState;
@@ -159,6 +167,7 @@ class pipelineSimulation : public simulation {
         float           scalar;
         unsigned int    array[160];
         riscvInstr      assemblyCode;
+        executeData     exeData;
 } pipelineSimulation;
 
 
@@ -378,46 +387,7 @@ void pipelineSimulation::execute(){
     if(pipelineBusy) {
         state.executeState = "STALL";
     }
-    else {
-        switch(assemblyCode.opcode){
-            case FLD:
-                //Stall time of 1 cycle
-                f0 = array[x1];
-                state.executeState = "FLD";
-                break;
-
-            case FADD:
-                //Stall time of 3 cycles
-                stallTime = 2;
-                f4 = f0 + f2;
-                state.executeState = "FSQRT";
-                break;
-
-            case FSD:
-                //Stall time of 2 cycles
-                array[x1] = f4;
-                state.executeState = "FSD";
-                break;
-
-            case ADDI:
-                x1 = x1 - 8;
-                state.executeState = "ADDI";
-                break;
-
-            case BNE:
-                if(x1 != x2){
-                    //pc = assemblyCode.imm;
-                }   
-                else{
-                    halt();
-                }
-                state.executeState = "BNE";
-                break;
-            default:
-                break;
-
-        }
-    }
+    pipeline_execute();
 }
 
 void pipelineSimulation::store(){
