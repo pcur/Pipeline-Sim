@@ -10,6 +10,8 @@ public:
     void storeWord(uint32_t address, uint32_t data);
     uint16_t loadHalfWord(uint32_t address);
     void storeHalfWord(uint32_t address, uint16_t data);
+    uint8_t loadByte(uint32_t address);
+    void storeByte(uint32_t address, uint8_t data);
 private:
     uint8_t* memory; // Simple byte-addressable memory
 };
@@ -71,4 +73,20 @@ void Memory::storeHalfWord(uint32_t address, uint16_t data) {
     }
     memory[address] = (data >> 8) & 0xFF;
     memory[address + 1] = data & 0xFF;
+}
+
+uint8_t Memory::loadByte(uint32_t address) {
+    if (address >= mem_size) {
+        std::cout << "Error: Out-of-bounds memory access at address 0x" << std::hex << address << std::endl;
+        return 0;
+    }
+    return memory[address];
+}
+
+void Memory::storeByte(uint32_t address, uint8_t data) {
+    if (address >= mem_size) {
+        std::cout << "Error: Out-of-bounds memory access at address 0x" << std::hex << address << std::endl;
+        return;
+    }
+    memory[address] = data;
 }
