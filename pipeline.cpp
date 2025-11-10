@@ -261,7 +261,7 @@ void pipelineSimulation::decode(){
             assemblyCode.store_sel = 1;
             assemblyCode.mem_load_sel = 1;
             assemblyCode.wb_enable = 1;
-            assemblyCode.rw_enable = 1;
+            assemblyCode.rw_enable = 0;
             break;
 
         case STYPE: // stores

@@ -13,7 +13,7 @@ Patrick Cur, Team Member
 - Presenting Demos
 
 Joshua Kauffman, Team Member
-- Schematic of decoder
+- Schematic and architecture of decoder
 - RISC-V knower
 - instruction loading
 - Pipeline architecture setup
