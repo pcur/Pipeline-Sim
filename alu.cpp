@@ -46,3 +46,18 @@ int alu(int reg1_val, int reg2_val, int function_code){
             break;
     }
 }
+
+float alu(float reg1_val, float reg2_val, int function_code){
+    switch(function_code){
+        // FADD.S
+        case FADDS:
+            return reg1_val + reg2_val;
+            break;
+        // FSUB.S
+        case FSUBS:
+            return reg1_val - reg2_val;
+            break;
+        default:
+            break;
+    }
+}

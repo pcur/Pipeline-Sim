@@ -1,3 +1,4 @@
+// For the int alu
 #define ADD     0b0000000000
 #define SUB     0b0100000000
 #define SLL     0b0000000001
@@ -9,5 +10,10 @@
 #define OR      0b0000000110
 #define AND     0b0000000111
 
+// For the floating point alu
+#define FADDS   0b0000000000
+#define FSUBS   0b0000100000
 
 int alu(int reg1_val, int reg2_val, int function_code);
+
+float alu(float reg1_val, float reg2_val, int function_code);
