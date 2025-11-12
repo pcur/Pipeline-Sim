@@ -1,6 +1,6 @@
 #include <cstdint>
 
-// For the int alu
+// For the arithmetic int alu operations
 #define ADD     0b0000000000
 #define SUB     0b0100000000
 #define SLL     0b0000000001
@@ -11,6 +11,14 @@
 #define SRA     0b0100000101
 #define OR      0b0000000110
 #define AND     0b0000000111
+
+// For the logical int alu operations
+#define BEQ     0b1100011000
+#define BNE     0b1100011001
+#define BLT     0b1100011100
+#define BGE     0b1100011101
+#define BLTU    0b1100011110
+#define BGEU    0b1100011111
 
 // For the floating point alu
 #define FADDS   0b0000000000

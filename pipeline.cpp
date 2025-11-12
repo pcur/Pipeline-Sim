@@ -57,6 +57,8 @@ struct executeData{
     float alu_float1;
     float alu_float2;
     int wb_val;
+    uint32_t wb_reg;
+    uint8_t wb;
 };
 
 struct pipelineState{
@@ -262,6 +264,8 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 1;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            // Size control
+            assemblyCode.bit_len = 8 << assemblyCode.funct3
             break;
 
         case STYPE: // stores
@@ -292,7 +296,7 @@ void pipelineSimulation::decode(){
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             // ALU control
-            assemblyCode.alucode = assemblyCode.funct3 << 3; //TODO: Need some way to keep it unique from other op codes            
+            assemblyCode.alucode = (assemblyCode.opcode << 3) + assemblyCode.funct3;             
             assemblyCode.pc_enable = 0;
             assemblyCode.imm_sel = 0;
             // Memory mux control
@@ -393,6 +397,17 @@ void pipelineSimulation::execute(){
 void pipelineSimulation::store(){
 // No store stage actions needed for this simulation
     state.storeState = state.executeState;
+    switch(exeData.wb){
+        case 1:
+            int_reg_bank[exeData.wb_reg] = exeData.wb_int_val;
+            break;
+        case 2:
+            float_reg_bank[exeData.wb_reg] = exeData.wb_float_val;
+            break;
+        default:
+            break;
+    }
+        
 }
 
 void pipelineSimulation::halt(){

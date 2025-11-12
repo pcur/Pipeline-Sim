@@ -4,6 +4,7 @@
 int alu(int reg1_val, int reg2_val, int function_code){
     int val;
     switch(function_code){
+        // Arithmetic ALU ops
         // Add
         case ADD:
             val = reg1_val + reg2_val;
@@ -42,6 +43,31 @@ int alu(int reg1_val, int reg2_val, int function_code){
         // AND
         case AND:
             val = reg1_val & reg2_val;
+            break;
+        // Branching ALU ops
+        // Branch Equal to
+        case BEQ:
+            if(reg1_val == reg2_val) pc = pc + assemblyCode.imm - 1; // -1 Because we add it already in fetch
+            break;
+        // Branch Not Equal to
+        case BNE:
+            if(reg1_val != reg2_val) pc = pc + assemblyCode.imm - 1;
+            break;
+        // Branch less than
+        case BLT:
+            if(reg1_val < reg2_val) pc = pc + assemblyCode.imm - 1;
+            break;
+        // Branch greater than
+        case BGE:
+            if(reg1_val > reg2_val) pc = pc + assemblyCode.imm - 1;
+            break;
+        // Branch Less than or Equal to
+        case BLTU:
+            if(reg1_val <= reg2_val) pc = pc + assemblyCode.imm - 1;
+            break;
+        // Branch Greater than or Equal to
+        case BGEU:
+            if(reg1_val >= reg2_val) pc = pc + assemblyCode.imm - 1;
             break;
         default:
             val = 0;
