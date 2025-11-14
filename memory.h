@@ -2,7 +2,10 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <iomanip>
+#include <sstream>
 
+#define DEBUG 1
 #define MEM_SIZE 1024
 
 // Size specifiers for dynamic store/load (in bits)
