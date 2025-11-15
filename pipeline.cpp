@@ -16,9 +16,11 @@
 #define RTYPE   0b0110011
 #define RTYPE2  0b1010011
 #define ITYPE   0b0010011
+#define ITYPE2  0b0000111
 #define ITYPE3  0b0000011
 #define BTYPE   0b1100011
-#define STYPE   0b0100111
+#define STYPE   0b0100011
+#define STYPE2  0b0100111
 #define UTYPE   0b0110111
 #define UTYPE2  0b0010111
 #define JTYPE   0b1101111
@@ -49,6 +51,7 @@ struct riscvInstr{
     int bit_len;
     bool rw_enable;
     bool wb_enable;
+    int float_regs;
 };
 
 struct executeData{
@@ -204,6 +207,7 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             break;
 
         case RTYPE2: // register arithmetic
@@ -223,6 +227,7 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 2;
             break;
 
         case ITYPE: // immediate arithmetic
@@ -245,9 +250,30 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             break;
 
-        case ITYPE3: // I type, loads
+        case ITYPE2: // I type, loads, float
+            state.decodeState    = "ITYPE-LF"; 
+            // I-type instruction decoding
+            assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
+            assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
+            assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
+            assemblyCode.rd      = (instruction & 0x00000F80) >> 7;
+            assemblyCode.funct7 = 0;
+            // ALU control
+            assemblyCode.alucode = 0; // add
+            assemblyCode.pc_enable = 0;
+            assemblyCode.imm_sel = 1;
+            // Memory mux control
+            assemblyCode.store_sel = 1;
+            assemblyCode.mem_load_sel = 1;
+            assemblyCode.wb_enable = 1;
+            assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 1;
+            break;
+
+        case ITYPE3: // I type, loads, int
             state.decodeState    = "ITYPE-L"; 
             // I-type instruction decoding
             assemblyCode.imm     = (instruction & 0xFFF00000) >> 20;
@@ -264,6 +290,7 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 1;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             // Size control
             assemblyCode.bit_len = 8 << assemblyCode.funct3
             break;
@@ -284,8 +311,28 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 1;
             assemblyCode.wb_enable = 0;
             assemblyCode.rw_enable = 1;
+            assemblyCode.float_regs = 0;
             // Size control
             assemblyCode.bit_len = 8 << assemblyCode.funct3;
+            break;
+
+        case STYPE2:
+            state.decodeState    = "STYPE-F";
+            // S-type instruction decoding
+            assemblyCode.imm     = ((instruction & 0xFE000000) >> 25) + ((instruction & 0x00000F80) >> 7);
+            assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
+            assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
+            assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
+            // ALU control
+            assemblyCode.alucode = 0; // add
+            assemblyCode.pc_enable = 0;
+            assemblyCode.imm_sel = 1;
+            // Memory mux control
+            assemblyCode.store_sel = 1;
+            assemblyCode.mem_load_sel = 1;
+            assemblyCode.wb_enable = 0;
+            assemblyCode.rw_enable = 1;
+            assemblyCode.float_regs = 1;
             break;
 
         case BTYPE: // branching
@@ -304,6 +351,7 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 0;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             break;
 
         case JTYPE: // jal
@@ -322,6 +370,7 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             break;
         
         case JTYPE2: // jalr
@@ -341,6 +390,7 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             break;
             
         case UTYPE: // lui - load upper immediate
@@ -357,6 +407,7 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             break;
 
         case UTYPE2: // auipc - add upper immediate to pc
@@ -373,6 +424,7 @@ void pipelineSimulation::decode(){
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             break;
 
         case NOP: // no op
