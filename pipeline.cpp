@@ -36,9 +36,6 @@
 #define HalfWord    16
 #define Word        32
 
-uint32_t int_reg_bank[32];
-float   float_reg_bank[32];
-
 unsigned int instrQ[10];
 uint32_t pc;
 bool halted;
@@ -188,6 +185,9 @@ class pipelineSimulation : public simulation {
         unsigned int    array[160];
         riscvInstr      assemblyCode;
         executeData     exeData;
+        uint32_t int_reg_bank[32];
+        float   float_reg_bank[32];
+
 } pipelineSimulation;
 
 
