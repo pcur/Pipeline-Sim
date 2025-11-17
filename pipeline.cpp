@@ -6,6 +6,8 @@
 #include <bitset>
 #include <cstdint>
 #include "alu.h"
+#include "memory.h"
+
 
 /*
 #define FLD     0b0000111
@@ -74,6 +76,8 @@ struct executeData{
     uint32_t wb_reg;
     uint8_t wb;
 };
+
+Memory simMemory;
 
 struct pipelineState{
     std::string fetchState;
@@ -199,7 +203,7 @@ void pipelineSimulation::fetch(){
 
 void pipelineSimulation::decode(){
     assemblyCode.opcode = instruction & 0x7F;
-
+    
     switch(assemblyCode.opcode){
         case RTYPE: // register arithmetic
             state.decodeState    = "RTYPE";
@@ -477,13 +481,13 @@ void pipelineSimulation::execute(){
                     //STORE FUNCTION HERE
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            //storeByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            simMemory.storeByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case HalfWord:
-                            //storeHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            simMemory.storeHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case Word:
-                            //storeWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            simMemory.storeWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         default:
                             break;
@@ -493,13 +497,13 @@ void pipelineSimulation::execute(){
                     //LOAD FUNCTION HERE
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            //exeData.wb_int_val = loadByte(int_alu_val);
+                            exeData.wb_int_val = simMemory.loadByte(int_alu_val);
                             break;
                         case HalfWord:
-                            //exeData.wb_int_val = loadHalfWord(int_alu_val);
+                            exeData.wb_int_val = simMemory.loadHalfWord(int_alu_val);
                             break;
                         case Word:
-                            //exeData.wb_int_val = loadWord(int_alu_val);
+                            exeData.wb_int_val = simMemory.loadWord(int_alu_val);
                             break;
                         default:
                             break;
@@ -523,11 +527,11 @@ void pipelineSimulation::execute(){
                 int_demux_store_line = int_alu_val;
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     //STORE FUNCTION HERE
-                    //storeWord(int_alu_val, float(float_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                    simMemory.storeWord(int_alu_val, float(float_reg_bank[assemblyCode.rs2]));
                 }
                 else{
                     //LOAD FUNCTION HERE
-                    //exeData.wb_int_val = loadWord(int_alu_val);
+                    exeData.wb_int_val = simMemory.loadWord(int_alu_val);
                 }
             }
             else{
@@ -563,9 +567,11 @@ void pipelineSimulation::store(){
     switch(exeData.wb){
         case 1:
             int_reg_bank[exeData.wb_reg] = exeData.wb_int_val;
+            exeData.wb = 0;
             break;
         case 2:
             float_reg_bank[exeData.wb_reg] = exeData.wb_float_val;
+            exeData.wb = 0;
             break;
         default:
             break;
