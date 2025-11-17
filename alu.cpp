@@ -69,6 +69,15 @@ int alu(int reg1_val, int reg2_val, int function_code, uint32_t pc, int imm){
         case BGEU:
             if(reg1_val >= reg2_val) pc = pc + imm - 1;
             break;
+        case JAL:
+            pc = pc + imm - 1;
+            break;
+        case JALR:
+            pc = pc + imm - 1;
+            break;
+        case LUI:
+            val = reg2_val << 12;
+            break;
         default:
             val = 0;
             break;
