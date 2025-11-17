@@ -2,6 +2,8 @@
 Pipelined CPU Sim for comp arch taught by Dr. Mukerjee, by Team 2-2
 Allows for single cpu-memory cacheless systems to be simulated with a limited RISC-V instruction set including most of RV32I, and selective instructions from RV32M and RV32F. 
 
+Tests can be compiled with `compile-tests.sh`, may require you to run `chmod +x compile-tests.sh` to make executable.
+
 ### Contributors and Contributions
 Patrick Cur, Team Member
 - Priority queue for pipelined cpu sim including halts, stalls
@@ -24,3 +26,5 @@ Joshua Kauffman, Team Member
 
 Matthew Montano, Team Member
 - Presentation of Ice Cream Sim
+
+Specific contribution history (commits) can also be found on the github.

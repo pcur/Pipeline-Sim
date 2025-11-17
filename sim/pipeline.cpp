@@ -5,8 +5,8 @@
 #include <random>
 #include <bitset>
 #include <cstdint>
-#include "alu.h"
-#include "memory.h"
+#include "../sim/alu.h"
+#include "../sim/memory.h"
 
 
 /*
@@ -39,10 +39,10 @@
 uint32_t int_reg_bank[32];
 float   float_reg_bank[32];
 
-unsigned int instrQ[10];
-uint32_t pc;
-bool halted;
-int debug;
+extern unsigned int instrQ[10];
+extern uint32_t pc;
+extern bool halted;
+extern int debug;
 
 struct riscvInstr{
     // RISC-V instruction fields
@@ -683,18 +683,4 @@ void executeEvent::processEvent(){
 }
 void storeEvent::processEvent(){
     pipelineSimulation.store();
-}
-
-int main(){
-    debug = 1;
-    halted = 0;
-    std::cout << "Pipeline Simulation, assignment 2\n";
-    fill_queue("instructions.txt", instrQ, 9);
-
-    for(int i = 0; i < 8; i++){
-        std::cout << instrQ[i] << std::endl;
-    }
-    pipelineSimulation.run();
-
-    return 0;
 }

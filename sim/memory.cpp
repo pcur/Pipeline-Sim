@@ -1,4 +1,4 @@
-#include "memory.h"
+#include "../sim/memory.h"
 
 void printDebug(const std::string &msg, int debugLevel) {
     #ifdef DEBUG

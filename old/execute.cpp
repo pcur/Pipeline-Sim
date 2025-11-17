@@ -1,7 +1,7 @@
 #define Byte        8
 #define HalfWord    16
 #define Word        32
-
+#include "../sim/memory.h"
 uint32_t int_reg_bank[32];
 float   float_reg_bank[32];
 

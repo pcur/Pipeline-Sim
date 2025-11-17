@@ -5,6 +5,7 @@
 #include <random>
 #include <bitset>
 #include <cstdint>
+#include "../test/config.h"
 
 #define FLD     0b0000111
 #define FADD    0b1010011

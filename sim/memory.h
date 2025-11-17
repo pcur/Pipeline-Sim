@@ -4,17 +4,16 @@
 #include <tuple>
 #include <iomanip>
 #include <sstream>
-
 #define DEBUG 1
+
+#define LOAD_LATENCY 20 //in ticks
+#define STORE_LATENCY 20 //in ticks
 #define MEM_SIZE 1024
 
 // Size specifiers for dynamic store/load (in bits)
 #define SIZE_BYTE      8
 #define SIZE_HALFWORD  16
 #define SIZE_WORD      32
-
-#define LOAD_LATENCY 20 //in ticks
-#define STORE_LATENCY 20 //in ticks
 
 // Base Memory class providing basic load/store functionality of a memory system.
 // Can be constructed with a default size or a custom size.

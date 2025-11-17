@@ -1,5 +1,7 @@
 // Simple test main function to verify functionality of memory bus module
-#include "memory.h"
+#include "../sim/memory.h"
+#include "../test/config.h"
+
 int main(){
     std::cout << "Memory module test\n";
     MemoryBus memorybus = MemoryBus(255, 511, 767, 1023); // 4 banks of 256 bytes each

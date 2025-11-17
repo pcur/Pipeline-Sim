@@ -1,4 +1,4 @@
-#include "alu.h"
+#include "../sim/alu.h"
 
 
 int alu(int reg1_val, int reg2_val, int function_code, uint32_t pc, int imm){
