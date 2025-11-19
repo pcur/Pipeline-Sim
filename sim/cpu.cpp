@@ -36,6 +36,16 @@ int32_t decodeJALImmediate(uint32_t instruction) {
     return imm;
 }
 
+// Sign extend 'value', whose actual bit-width is 'bits' (e.g. 12 for I-Type)
+static inline int32_t signExtend(uint32_t value, int bits) {
+    // If the sign bit is set...
+    if (value & (1u << (bits - 1))) {
+        // extend with 1s from bit 'bits' upward
+        return value | (~((1u << bits) - 1));
+    }
+    return value;
+}
+
 void CpuSim::fetch(){
     bool loadSuccess;
      std::tie(instruction, loadSuccess) = simMemory.tryLoadWord(pc);
@@ -313,8 +323,8 @@ void CpuSim::decode(){
             state.decodeState    = "???";
             printDebug("ERR: Decoded unknown instruction with opcode: " + std::to_string(assemblyCode.opcode), 0);
             break;
-
     }
+    if(assemblyCode.opcode != UTYPE) assemblyCode.imm = signExtend(assemblyCode.imm, 12);
 }
 
 void CpuSim::execute(){
