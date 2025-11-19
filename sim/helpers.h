@@ -1,4 +1,5 @@
 #pragma once
+#include "../test/config.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -7,13 +8,13 @@
 #include <bitset>
 
 inline void printDebug(const std::string &msg, int debugLevel) {
+    if (debugLevel == 0){
+    std::cout << msg << std::endl;
+    return;
+    }
     #ifdef DEBUG
     if (debugLevel <= DEBUG)
     std::cout << "DEBUG: " << msg << std::endl;
-    #endif
-    #ifndef DEBUG
-    if (debugLevel == 0)
-    std::cout << msg << std::endl;
     #endif
 }
 

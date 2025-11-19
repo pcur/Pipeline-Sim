@@ -1,4 +1,5 @@
-#include "../test/config.h"
+
+#define DEBUG 3
 #include "../sim/cpu.h"
 
 int debug;
@@ -18,6 +19,7 @@ int main() {
 
      // Load instructions into memory
     printDebug("Starting CPU simulation loop", 0);
+    printDebug("============================================================", 0);
     cpu1.pc = 0;
     halted = false;
 

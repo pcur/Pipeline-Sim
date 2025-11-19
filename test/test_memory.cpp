@@ -1,6 +1,5 @@
 // Simple test main function to verify functionality of memory bus module
 #include "../sim/memory.h"
-#include "../test/config.h"
 
 int main(){
     printDebug("Memory module test", 0);
