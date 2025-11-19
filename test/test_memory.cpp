@@ -4,7 +4,7 @@
 
 int main(){
     std::cout << "Memory module test\n";
-    MemoryBus memorybus = MemoryBus(255, 511, 767, 1023); // 4 banks of 256 bytes each
+    MemoryBus memorybus = MemoryBus(255, 511, 1023); // 3 banks of 256 bytes each
     uint32_t test_address = 0x100;
     uint32_t test_data = 0xDEADBEEF;
 

@@ -115,7 +115,7 @@ class simulation {
 
 class pipelineSimulation : public simulation {
     public:
-        pipelineSimulation() : simulation(), threads(1), pipelineBusy(0), scalar(0), x1(160), x2(0), f2(1) {}
+        pipelineSimulation(MemoryBus memBus) : simulation(), threads(1), pipelineBusy(0), scalar(0), x1(160), x2(0), f2(1), simMemory(memBus) {}
         bool notStalled();
         void fetch();
         void decode();
@@ -140,6 +140,7 @@ class pipelineSimulation : public simulation {
         executeData     exeData;
         uint32_t int_reg_bank[32] = {0,};
         float   float_reg_bank[32];
+        MemoryBus simMemory;
 };
 
 class fetchEvent : public event {

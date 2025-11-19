@@ -39,7 +39,7 @@ protected:  // Changed from private to protected for derived access
 class MemoryBus : public Memory {
 public:
     //Memory Bus Constructor
-    MemoryBus(uint32_t bank1endaddr, uint32_t bank2endaddr, uint32_t bank3endaddr, uint32_t bank4endaddr);
+    MemoryBus(uint32_t bank1endaddr, uint32_t bank2endaddr, uint32_t bank3endaddr);
     //Memory Bus Destructor
     ~MemoryBus();
     

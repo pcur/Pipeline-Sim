@@ -99,17 +99,16 @@ uint8_t Memory::loadByte(uint32_t address) {
     return memory[address];
 }
 
-MemoryBus::MemoryBus(uint32_t bank0endaddr, uint32_t bank1endaddr, uint32_t bank2endaddr, uint32_t bank3endaddr) {
+MemoryBus::MemoryBus(uint32_t bank0endaddr, uint32_t bank1endaddr, uint32_t bank2endaddr) {
     
     bank_offsets.push_back(0); // bank 0 offset
     bank_offsets.push_back(bank0endaddr + 1); // bank 1 offset
     bank_offsets.push_back(bank1endaddr + 1); // bank 2 offset
-    bank_offsets.push_back(bank2endaddr + 1); // bank 3 offset
 
-    bank_locks.resize(4, false); // Initialize all bank locks to false (unlocked)
-    ticks_until_free.resize(4, 0); // Initialize all ticks until free to 0
+    bank_locks.resize(3, false); // Initialize all bank locks to false (unlocked)
+    ticks_until_free.resize(3, 0); // Initialize all ticks until free to 0
 
-    mem_size = bank3endaddr + 1;
+    mem_size = bank2endaddr + 1;
     memory = new uint8_t[mem_size];
     for (int i = 0; i < mem_size; ++i) {
         memory[i] = 0;

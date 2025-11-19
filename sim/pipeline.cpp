@@ -4,8 +4,6 @@ uint32_t pc;
 uint32_t int_reg_bank[32];
 float   float_reg_bank[32];
 
-MemoryBus simMemory(0x00FF, 0x01FF, 0x03FF, 0x13FF);
-
 int32_t decodeBTypeImm(uint32_t instr) {
     uint32_t imm12   = (instr >> 31) & 0x1;       // bit 31 -> imm[12]
     uint32_t imm11   = (instr >> 7)  & 0x1;       // bit 7  -> imm[11]
@@ -348,15 +346,20 @@ void pipelineSimulation::execute(){
                 }
                 else{
                     //LOAD FUNCTION HERE
+                    bool load_success;
+                    unsigned int data;
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            exeData.wb_int_val = simMemory.tryLoadByte(int_alu_val);
+                            std::tie(data, load_success) = simMemory.tryLoadByte(int_alu_val);
+                            exeData.wb_int_val = data;
                             break;
                         case HalfWord:
-                            exeData.wb_int_val = simMemory.tryLoadHalfWord(int_alu_val);
+                            std::tie(data, load_success) = simMemory.tryLoadHalfWord(int_alu_val);
+                            exeData.wb_int_val = data;
                             break;
                         case Word:
-                            exeData.wb_int_val = simMemory.tryLoadWord(int_alu_val);
+                            std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
+                            exeData.wb_int_val = data;
                             break;
                         default:
                             break;
@@ -384,7 +387,10 @@ void pipelineSimulation::execute(){
                 }
                 else{
                     //LOAD FUNCTION HERE
-                    exeData.wb_int_val = simMemory.tryLoadWord(int_alu_val);
+                    unsigned int data;
+                    bool load_success;
+                    std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
+                    exeData.wb_int_val = data;
                 }
             }
             else{
