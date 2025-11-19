@@ -1,5 +1,6 @@
 #include "../sim/pipeline.h"
 #include <cstring>
+
 void fill_queue(const std::string& filename, unsigned int* instructionQueue, size_t queueSize) {
     std::ifstream infile(filename);
     std::string line;
@@ -15,19 +16,6 @@ void fill_queue(const std::string& filename, unsigned int* instructionQueue, siz
 int debug;
 bool halted;
 unsigned int instrQ[10];
-
-//Store random FP32 values into memory arrays between specified addresses
-void initialize_mem_array(MemoryBus& memBus, uint32_t startAddr, uint32_t endAddr, unsigned int seed = 42) {
-    std::srand(seed); // Seed for reproducibility
-    uint32_t numFloats = (endAddr - startAddr + 1) / 4;
-    for(uint32_t i = 0; i < numFloats; i++){
-        float randomValue = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 100.0f; // Random float between 0 and 100
-        uint32_t binaryValue;
-        std::memcpy(&binaryValue, &randomValue, sizeof(float)); // Copy float bits to uint32_t
-        uint32_t memAddr = startAddr + (i * 4);
-        memBus.storeWord(memAddr, binaryValue);
-    }
-}
 
 int main(){
     uint32_t tempQ[38];

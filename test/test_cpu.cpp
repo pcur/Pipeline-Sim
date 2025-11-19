@@ -1,3 +1,4 @@
+#include "../test/config.h"
 #include "../sim/cpu.h"
 
 int debug;
@@ -12,8 +13,10 @@ int main() {
     CpuSim cpu1 = CpuSim(memBus);
 
     printDebug("Setting up instruction queue", 0);
-    fill_queue("test/instructions.txt", instrQ, 10);
+    fill_queue("instructions.txt", instrQ, 10);
+    load_mem_array(memBus, 0x0000, 0x0027, instrQ);
 
+     // Load instructions into memory
     printDebug("Starting CPU simulation loop", 0);
     cpu1.pc = 0;
     halted = false;

@@ -77,7 +77,7 @@ struct pipelineState{
 
 class CpuSim {
     public:
-        CpuSim(MemoryBus memBus) : pipelineBusy(0), scalar(0), x1(160), x2(0), f2(1), simMemory(memBus) {}
+        CpuSim(MemoryBus& memBus) : pipelineBusy(0), scalar(0), x1(160), x2(0), f2(1), simMemory(memBus) {}
         bool notStalled();
         void fetch();
         void decode();
@@ -101,5 +101,5 @@ class CpuSim {
         executeData     exeData;
         uint32_t int_reg_bank[32] = {0,};
         float   float_reg_bank[32];
-        MemoryBus simMemory;
+        MemoryBus& simMemory;
 };

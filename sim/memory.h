@@ -66,3 +66,25 @@ private:
     bool is_locked(uint32_t address); 
     std::vector<uint8_t> ticks_until_free; // Tracks ticks until each bank is free
 };
+
+//Store random FP32 values into memory arrays between specified addresses
+inline void initialize_mem_array(MemoryBus& memBus, uint32_t startAddr, uint32_t endAddr, unsigned int seed = 42) {
+    std::srand(seed); // Seed for reproducibility
+    uint32_t numFloats = (endAddr - startAddr + 1) / 4;
+    for(uint32_t i = 0; i < numFloats; i++){
+        float randomValue = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 100.0f; // Random float between 0 and 100
+        uint32_t binaryValue;
+        std::memcpy(&binaryValue, &randomValue, sizeof(float)); // Copy float bits to uint32_t
+        uint32_t memAddr = startAddr + (i * 4);
+        memBus.storeWord(memAddr, binaryValue);
+    }
+}
+
+//Store instruction queue array into memory with start and end addresses
+inline void load_mem_array(MemoryBus& memBus, uint32_t startAddr, uint32_t endAddr, unsigned int* instructionQueue) {
+    uint32_t numInstructions = (endAddr - startAddr + 1) / 4;
+    for(uint32_t i = 0; i < numInstructions; i++){
+        uint32_t memAddr = startAddr + (i * 4);
+        memBus.storeWord(memAddr, instructionQueue[i]);
+    }
+}
