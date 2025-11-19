@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 
 // For the arithmetic int alu operations
