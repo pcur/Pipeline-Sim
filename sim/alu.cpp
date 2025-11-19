@@ -70,10 +70,10 @@ int alu(int reg1_val, int reg2_val, int function_code, uint32_t progCount, int i
             if(reg1_val >= reg2_val) progCount = progCount + imm - 1;
             break;
         case JAL:
-            pc = pc + imm - 1;
+            progCount = progCount + imm - 1;
             break;
         case JALR:
-            pc = pc + imm - 1;
+            progCount = progCount + imm - 1;
             break;
         case LUI:
             val = reg2_val << 12;
