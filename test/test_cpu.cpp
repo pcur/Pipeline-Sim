@@ -36,7 +36,7 @@ int main() {
     printDebug("\nEXECUTE STAGE:", 0);
     cpu1.execute();
     printStr = "state: " + cpu1.state.executeState + ", alu_val1: " + std::to_string(cpu1.exeData.alu_val1);
-    printDebug(printStr, 0);
+    //printDebug(printStr, 0);
 
     printDebug("\nSTORE STAGE:", 0);
     cpu1.store();

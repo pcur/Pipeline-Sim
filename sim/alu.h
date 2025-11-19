@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <string>
+#include <iostream>
+#include "helpers.h"
 
 // For the arithmetic int alu operations
 #define ADD     0b0000000000
