@@ -22,7 +22,7 @@ int main() {
     printDebug("============================================================", 0);
     cpu1.pc = 0;
     halted = false;
-
+    for(int w=0;w<6;w++){
     printDebug("FETCH STAGE:", 0);
     cpu1.fetch();
     std::string printStr = "state: " + cpu1.state.fetchState + ", instruction: " + std::to_string(cpu1.instruction);
@@ -42,7 +42,7 @@ int main() {
     cpu1.store();
     printStr = "state: " + cpu1.state.storeState;
     printDebug(printStr, 0);
-
+    }
     printDebug("End of CPU test", 0);
     return 0;
 }

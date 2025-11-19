@@ -99,7 +99,7 @@ class CpuSim {
         unsigned int    array[160];
         riscvInstr      assemblyCode;
         executeData     exeData;
-        uint32_t int_reg_bank[32] = {0,};
+        uint32_t int_reg_bank[32] = {0,12,14,10, };
         float   float_reg_bank[32];
         MemoryBus& simMemory;
 };

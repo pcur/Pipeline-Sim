@@ -45,7 +45,7 @@ void CpuSim::fetch(){
          return;
      }
      printDebug("Fetched instruction 0x" + std::to_string(instruction) + " at PC " + std::to_string(pc), 1);
-    pc++;
+    pc+=4;
 }
 
 void CpuSim::decode(){
@@ -478,7 +478,7 @@ void CpuSim::store(){
             exeData.wb = 0;
             break;
         default:
-            printDebug("ERR: Default case reached in store stage", 0);
+            printDebug("No write back required for instruction", 0);
             break;
     }
         

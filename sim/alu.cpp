@@ -60,39 +60,47 @@ int alu(int reg1_val, int reg2_val, int function_code, uint32_t progCount, int i
         // Branch Equal to
         case BEQ:
             if(reg1_val == reg2_val) progCount = progCount + imm - 1; // -1 Because we add it already in fetch
+            val = progCount;
             state = "BEQ";
             break;
         // Branch Not Equal to
         case BNE:
             if(reg1_val != reg2_val) progCount = progCount + imm - 1;
+            val = progCount;
             state = "BNE";
             break;
         // Branch less than
         case BLT:
             if(reg1_val < reg2_val) progCount = progCount + imm - 1;
+            val = progCount;
             state = "BTL";
             break;
         // Branch greater than
         case BGE:
             if(reg1_val > reg2_val) progCount = progCount + imm - 1;
+            val = progCount;
             state = "BGE";
             break;
         // Branch Less than or Equal to
         case BLTU:
             if(reg1_val <= reg2_val) progCount = progCount + imm - 1;
+            val = progCount;
             state = "BLTU";
             break;
         // Branch Greater than or Equal to
         case BGEU:
             if(reg1_val >= reg2_val) progCount = progCount + imm - 1;
+            val = progCount;
             state = "BGEU";
             break;
         case JAL:
             progCount = progCount + imm - 1;
+            val = progCount;
             state = "JAL";
             break;
         case JALR:
             progCount = progCount + imm - 1;
+            val = progCount;
             state = "JALR";
             break;
         case LUI:
@@ -100,7 +108,7 @@ int alu(int reg1_val, int reg2_val, int function_code, uint32_t progCount, int i
             state = "LUI";
             break;
         default:
-            val = 0;
+            val = progCount;
             state = "????";
             break;
     }
