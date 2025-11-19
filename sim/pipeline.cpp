@@ -227,7 +227,7 @@ void pipelineSimulation::decode(){
             assemblyCode.funct3  = 0;
             assemblyCode.funct7  = 0;
             // ALU control
-            assemblyCode.alucode = 0;
+            assemblyCode.alucode = (assemblyCode.opcode << 3) + assemblyCode.funct3;
             assemblyCode.pc_enable = 1;
             assemblyCode.imm_sel = 0;
             // Memory mux control
@@ -247,7 +247,7 @@ void pipelineSimulation::decode(){
             assemblyCode.funct3  = 0;
             assemblyCode.funct7  = 0;
             // ALU control
-            assemblyCode.alucode = 0;
+            assemblyCode.alucode = (assemblyCode.opcode << 3) + assemblyCode.funct3;
             assemblyCode.pc_enable = 1;
             assemblyCode.imm_sel = 0;
             // Memory mux control
@@ -263,8 +263,11 @@ void pipelineSimulation::decode(){
             // U-type instruction decoding
             assemblyCode.imm    = (instruction & 0xFFFFF000) >> 12;
             assemblyCode.rd     = (instruction & 0x00000F80) >> 7;
+            assemblyCode.rs1    = 0;
+            assemblyCode.funct3 = 0;
+            assemblyCode.funct7 = 0;
             // ALU control
-            assemblyCode.alucode = 0x11111111; //TODO: keep the same
+            assemblyCode.alucode = (assemblyCode.opcode << 3) + assemblyCode.funct3;
             assemblyCode.pc_enable = 0;
             assemblyCode.imm_sel = 1;
             // Memory mux control
@@ -416,7 +419,12 @@ void pipelineSimulation::store(){
     state.storeState = state.executeState;
     switch(exeData.wb){
         case 1:
-            int_reg_bank[exeData.wb_reg] = exeData.wb_int_val;
+            if(exeData.wb_reg == 0){ // not allowed to write things to register 0, its forever 0
+            
+            }
+            else{
+                int_reg_bank[exeData.wb_reg] = exeData.wb_int_val;
+            }
             exeData.wb = 0;
             break;
         case 2:

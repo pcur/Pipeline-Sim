@@ -20,6 +20,13 @@
 #define BLTU    0b1100011110
 #define BGEU    0b1100011111
 
+// For the Jump stuff
+#define JAL     0b1101111000
+#define JALR    0b1100111000
+
+// For lui stuff
+#define LUI     0b0110111000
+
 // For the floating point alu
 #define FADDS   0b0000000000
 #define FSUBS   0b0000100000
