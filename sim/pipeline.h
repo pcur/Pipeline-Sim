@@ -36,7 +36,7 @@
 #define Word        32
 
 extern unsigned int instrQ[10];
-uint32_t pc;
+extern uint32_t pc;
 extern bool halted;
 extern int debug;
 
