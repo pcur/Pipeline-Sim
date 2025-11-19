@@ -26,7 +26,7 @@
 
 #define NOP     0b0000000
 unsigned int instrQ[10];
-uint32_t pc;
+//uint32_t pc;
 bool halted;
 int debug;
 

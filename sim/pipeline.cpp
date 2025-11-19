@@ -1,102 +1,9 @@
-#include <iostream>
-#include <fstream>
-#include <queue>
-#include <vector>
-#include <random>
-#include <bitset>
-#include <cstdint>
-#include "../sim/alu.h"
-#include "../sim/memory.h"
-
-
-/*
-#define FLD     0b0000111
-#define FADD    0b1010011
-#define FSD     0b0100111
-#define ADDI    0b0010011
-#define BNE     0b1100011
-*/
-
-#define RTYPE   0b0110011
-#define RTYPE2  0b1010011
-#define ITYPE   0b0010011
-#define ITYPE2  0b0000111
-#define ITYPE3  0b0000011
-#define BTYPE   0b1100011
-#define STYPE   0b0100011
-#define STYPE2  0b0100111
-#define UTYPE   0b0110111
-#define UTYPE2  0b0010111
-#define JTYPE   0b1101111
-#define JTYPE2  0b1100111
-
-#define NOP     0b0000000
-
-#define Byte        8
-#define HalfWord    16
-#define Word        32
+#include "../sim/pipeline.h"
 
 uint32_t int_reg_bank[32];
 float   float_reg_bank[32];
 
-extern unsigned int instrQ[10];
-extern uint32_t pc;
-extern bool halted;
-extern int debug;
-
-struct riscvInstr{
-    // RISC-V instruction fields
-    uint32_t opcode;
-    int funct3;
-    int funct7;
-    int rs1;
-    int rs2;
-    int imm;
-    int rd;
-    // ALU control
-    int alucode;
-    bool pc_enable;
-    bool imm_sel;
-    // Memory mux control
-    bool store_sel;
-    bool mem_load_sel;
-    int bit_len;
-    bool rw_enable;
-    bool wb_enable;
-    int float_regs;
-};
-
-struct executeData{
-    int alu_val1;
-    int alu_val2;
-    float alu_float1;
-    float alu_float2;
-    int wb_int_val;
-    float wb_float_val;
-    uint32_t wb_reg;
-    uint8_t wb;
-};
-
 Memory simMemory;
-
-struct pipelineState{
-    std::string fetchState;
-    std::string decodeState;
-    std::string executeState;
-    std::string storeState;
-};
-
-void fill_queue(const std::string& filename, unsigned int* instructionQueue, size_t queueSize) {
-    std::ifstream infile(filename);
-    std::string line;
-    size_t index = 0;
-
-    while (std::getline(infile, line) && index < queueSize) {
-        unsigned int instruction = std::bitset<32>(line).to_ulong();
-        instructionQueue[index] = instruction;  // Store instruction in array
-        ++index;  // Move to the next index
-    }
-}
 
 int32_t decodeBTypeImm(uint32_t instr) {
     uint32_t imm12   = (instr >> 31) & 0x1;       // bit 31 -> imm[12]
@@ -132,64 +39,6 @@ int32_t decodeJALImmediate(uint32_t instruction) {
 
     return imm;
 }
-
-class event {
-  public:
-      // Construct sets time of event.
-    event (float t, std::string n) : time (t), name(n) { }
-    
-      // Execute event by invoking this method.
-    virtual void processEvent () = 0;
-    
-    const float time;
-    std::string name;
-};
-
-struct eventComparator {
-  bool operator() (const event * left, const event * right) const {
-    return left->time > right->time;
-  }
-};
-
-class simulation {
-  public:
-    simulation () : clk (0.0), eventQueue () { }
-    void run ();
-    void scheduleEvent (event * newEvent) {
-      eventQueue.push(newEvent);
-    }
-    float clk;
-    pipelineState state;
-  protected:
-    std::priority_queue<event*, std::vector<event *, std::allocator<event*> >, eventComparator> eventQueue;
-};
-
-class pipelineSimulation : public simulation {
-    public:
-        pipelineSimulation() : simulation(), threads(1), pipelineBusy(0), scalar(0), x1(160), x2(0), f2(1) {}
-        bool notStalled();
-        void fetch();
-        void decode();
-        void execute();
-        void store();
-        void halt();
-
-        unsigned int    threads;
-        uint32_t        instruction;
-        uint32_t        jumpval;
-        uint16_t        f0;
-        uint16_t        f2;
-        uint16_t        f4;
-        uint16_t        x1;
-        uint16_t        x2;
-        uint32_t        stallTime;
-        bool            pipelineBusy;
-        float           scalar;
-        unsigned int    array[160];
-        riscvInstr      assemblyCode;
-        executeData     exeData;
-} pipelineSimulation;
-
 
 bool pipelineSimulation::notStalled(){
     if(pipelineBusy) return false;
@@ -589,32 +438,10 @@ void pipelineSimulation::halt(){
     halted = true;
 }
 
-class fetchEvent : public event {
-    public:
-        fetchEvent(float t) : event(t, "fetch"){}
-        virtual void processEvent();
-};
 
-class decodeEvent : public event {
-    public:
-        decodeEvent(float t) : event(t, "decode"){}
-        virtual void processEvent();
-};
+void pipelineSimulation::run(){
 
-class executeEvent : public event {
-    public:
-        executeEvent(float t) : event(t, "execute"){}
-        virtual void processEvent();
-};
-
-class storeEvent : public event {
-    public:
-        storeEvent(float t) : event(t, "store"){}
-        virtual void processEvent();
-};
-
-void simulation::run(){
-    pipelineSimulation.scheduleEvent(new fetchEvent(clk));
+    scheduleEvent(new fetchEvent(clk, this));
 
     while(!eventQueue.empty()){ //clock cycle loop
         while(eventQueue.top()->time <= clk + 1) {
@@ -628,7 +455,7 @@ void simulation::run(){
             printf("Clock Cycle: %04.1f", clk);
             std::cout << " Fetch: " << state.fetchState;
             std::cout << " Decode: " << state.decodeState << " Execute: " << state.executeState;
-            std::cout << " Store: " << state.storeState << " Value in x1: " << pipelineSimulation.x1 << std::endl;
+            std::cout << " Store: " << state.storeState << " Value in x1: " << x1 << std::endl;
         }
         if(debug == 2){
             std::priority_queue<event*, std::vector<event *, std::allocator<event*> >, eventComparator> queueCopy = eventQueue;
@@ -648,19 +475,19 @@ void simulation::run(){
             printf("Clock Cycle: %04.1f", clk);
             std::cout << " Fetch: " << state.fetchState;
             std::cout << " Decode: " << state.decodeState << " Execute: " << state.executeState;
-            std::cout << " Store: " << state.storeState << " Value in x1: " << pipelineSimulation.x1 << std::endl;
+            std::cout << " Store: " << state.storeState << " Value in x1: " << x1 << std::endl;
             return;
         }
         else{
-            if(pipelineSimulation.stallTime > 0) pipelineSimulation.pipelineBusy = 1;
-            if(pipelineSimulation.notStalled()){
-                pipelineSimulation.scheduleEvent(new fetchEvent(clk + 1.4));
+            if(stallTime > 0) pipelineBusy = 1;
+            if(notStalled()){
+                scheduleEvent(new fetchEvent(clk + 1.4, this));
             }
             else { 
-                pipelineSimulation.stallTime--;
+                stallTime--;
                 state.executeState = "STALL";
-                //pipelineSimulation.scheduleEvent(new executeEvent(clk + 1.1));
-                if(pipelineSimulation.stallTime <= 0) pipelineSimulation.pipelineBusy = 0;
+                //scheduleEvent(new executeEvent(clk + 1.1));
+                if(stallTime <= 0) pipelineBusy = 0;
             }
             clk++;
         }
@@ -668,19 +495,19 @@ void simulation::run(){
 }
 
 void fetchEvent::processEvent(){
-    pipelineSimulation.fetch();
-    pipelineSimulation.scheduleEvent(new decodeEvent(pipelineSimulation.clk + 1.3 + pipelineSimulation.stallTime));
+    cpuInstance->fetch();
+    cpuInstance->scheduleEvent(new decodeEvent(cpuInstance->clk + 1.3 + cpuInstance->stallTime, cpuInstance));
 }
 
 void decodeEvent::processEvent(){
-    pipelineSimulation.decode();
-    pipelineSimulation.scheduleEvent(new executeEvent(pipelineSimulation.clk + 1.2 + pipelineSimulation.stallTime));
+    cpuInstance->decode();
+    cpuInstance->scheduleEvent(new executeEvent(cpuInstance->clk + 1.2 + cpuInstance->stallTime, cpuInstance));
 }
 
 void executeEvent::processEvent(){
-    pipelineSimulation.execute();
-    pipelineSimulation.scheduleEvent(new storeEvent(pipelineSimulation.clk + 1.1));
+    cpuInstance->execute();
+    cpuInstance->scheduleEvent(new storeEvent(cpuInstance->clk + 1.1, cpuInstance));
 }
 void storeEvent::processEvent(){
-    pipelineSimulation.store();
+    cpuInstance->store();
 }
