@@ -45,6 +45,7 @@ class pipelineSimulation : public simulation {
         bool notStalled();
         void halt();
         void run ();
+        void debugPrintout();
 
         CpuSim * cpuInstance;
         pipelineState state;
@@ -73,5 +74,11 @@ class executeEvent : public event {
 class storeEvent : public event {
     public:
         storeEvent(float t, CpuSim* cpuInstance, pipelineSimulation* pipelineSim) : event(t, "store", cpuInstance, pipelineSim){}
+        void processEvent();
+};
+
+class hazardEvent : public event {
+    public:
+        hazardEvent(float t, CpuSim* cpuInstance, pipelineSimulation* pipelineSim) : event(t, "hazard", cpuInstance, pipelineSim) {}
         void processEvent();
 };
