@@ -25,9 +25,7 @@ int main(){
         ss3 << "Correctly failed to store word at address 0x" << std::hex << test_address;
         printDebug(ss3.str(), 0);
     }
-    for (int i = 0; i < STORE_LATENCY + 3; ++i) {
-        memorybus.tick();
-    }
+    memorybus.tick(STORE_LATENCY);
     printDebug("Lock should be removed", 0);
     
     uint32_t loaded_data = 0x0;

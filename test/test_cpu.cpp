@@ -43,5 +43,6 @@ int main() {
     printStr = "state: " + cpu1.state.storeState;
     printDebug(printStr, 0);
 
+    printDebug("End of CPU test", 0);
     return 0;
 }

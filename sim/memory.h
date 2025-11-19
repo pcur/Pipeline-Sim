@@ -54,7 +54,7 @@ public:
     // Loads a byte of data from the specified address, with arbitration
     std::tuple<uint8_t, bool> tryLoadByte(uint32_t address);
     // Tick: Advances the state of the memory bus by one tick (for arbitration timing)
-    void tick();
+    void tick(int num_ticks = 1);
 
 private:
 // Stores the start address of each bank

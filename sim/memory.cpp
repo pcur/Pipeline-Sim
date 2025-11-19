@@ -113,15 +113,19 @@ MemoryBus::~MemoryBus() {
     printDebug("MemoryBus deallocated", 1);
 }
 
-void MemoryBus::tick() {
-    for (size_t i = 0; i < ticks_until_free.size(); ++i) {
-        printDebug("Bank " + std::to_string(i) + " ticks until free before tick: " + std::to_string(ticks_until_free[i]), 2);
-        if (ticks_until_free[i] > 0) {
-            --ticks_until_free[i];
-            printDebug("Bank " + std::to_string(i) + " ticks until free: " + std::to_string(ticks_until_free[i]), 3);
-            if (ticks_until_free[i] == 0) {
-                bank_locks[i] = false; // Unlock the bank when ticks reach zero
-                printDebug("Bank " + std::to_string(i) + " unlocked", 1);
+void MemoryBus::tick(int num_ticks) {
+    for (int t = 0; t < num_ticks; ++t) {
+        for (size_t i = 0; i < ticks_until_free.size(); ++i) { //tick for each bank
+            if(bank_locks[i] == true) {
+                printDebug("Bank " + std::to_string(i) + " ticks until free before tick: " + std::to_string(ticks_until_free[i]), 2);
+                if (ticks_until_free[i] > 0) {
+                    --ticks_until_free[i];
+                    printDebug("Bank " + std::to_string(i) + " ticks until free: " + std::to_string(ticks_until_free[i]), 3);
+                    if (ticks_until_free[i] == 0) {
+                        bank_locks[i] = false; // Unlock the bank when ticks reach zero
+                        printDebug("Bank " + std::to_string(i) + " unlocked", 1);
+                    }
+                }
             }
         }
     }
