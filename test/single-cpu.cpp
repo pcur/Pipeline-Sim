@@ -12,7 +12,7 @@ int main(){
     //instance pipeline sim
     cpuSim = pipelineSimulation();
     //load data/instructions into memory
-    fill_queue("new_instructions.txt", tempQ, 38);
+    fill_queue("cpu0_instructions.txt", tempQ, 38);
     for(i=0;i<38;i++){
         memAddr = i * 4;
         memBank.storeWord(memAddr, tempQ[i]);
