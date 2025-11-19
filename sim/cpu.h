@@ -1,6 +1,7 @@
 #pragma once
 #include "../sim/memory.h"
 #include "../sim/alu.h"
+#include "../sim/helpers.h"
 
 /*
 #define FLD     0b0000111
@@ -83,6 +84,7 @@ class CpuSim {
         void execute();
         void store();
 
+        int pc;
         pipelineState   state;
         uint32_t        instruction;
         uint32_t        jumpval;

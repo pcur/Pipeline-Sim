@@ -1,11 +1,8 @@
 #pragma once
 #include <cstdint>
-#include <iostream>
 #include <vector>
 #include <tuple>
-#include <iomanip>
-#include <sstream>
-#define DEBUG 1
+#include "../sim/helpers.h"
 
 #define LOAD_LATENCY 20 //in ticks
 #define STORE_LATENCY 20 //in ticks

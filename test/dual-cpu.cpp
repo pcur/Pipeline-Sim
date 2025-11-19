@@ -1,6 +1,4 @@
-#include <iostream>
 #include "../sim/pipeline.h"
-#include <fstream>
 #include <cstring>
 void fill_queue(const std::string& filename, unsigned int* instructionQueue, size_t queueSize) {
     std::ifstream infile(filename);

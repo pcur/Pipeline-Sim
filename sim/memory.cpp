@@ -1,12 +1,5 @@
 #include "../sim/memory.h"
 
-void printDebug(const std::string &msg, int debugLevel) {
-    #ifdef DEBUG
-    if (debugLevel <= DEBUG)
-    std::cout << "DEBUG: " << msg << std::endl;
-    #endif
-}
-
 Memory::Memory(int size) {
     mem_size = size;
     memory = new uint8_t[mem_size];
@@ -117,7 +110,6 @@ MemoryBus::MemoryBus(uint32_t bank0endaddr, uint32_t bank1endaddr, uint32_t bank
 }
 
 MemoryBus::~MemoryBus() {
-    delete[] memory;
     printDebug("MemoryBus deallocated", 1);
 }
 
