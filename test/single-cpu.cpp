@@ -7,7 +7,6 @@ int main(){
     uint32_t i;
     uint32_t memAddr;
     //instance basic memory bank
-    Memory memBank = Memory();
     pipelineSimulation cpuSim;
     //instance pipeline sim
     cpuSim = pipelineSimulation();
@@ -15,7 +14,7 @@ int main(){
     fill_queue("cpu0_instructions.txt", tempQ, 38);
     for(i=0;i<38;i++){
         memAddr = i * 4;
-        memBank.storeWord(memAddr, tempQ[i]);
+        cpuSim.simMemory.tryStoreWord(memAddr, tempQ[i]);
     }
     //Run the sim
     cpuSim.run();

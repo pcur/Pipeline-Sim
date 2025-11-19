@@ -4,7 +4,7 @@ uint32_t pc;
 uint32_t int_reg_bank[32];
 float   float_reg_bank[32];
 
-Memory simMemory;
+MemoryBus simMemory(0x00FF, 0x01FF, 0x03FF, 0x13FF);
 
 int32_t decodeBTypeImm(uint32_t instr) {
     uint32_t imm12   = (instr >> 31) & 0x1;       // bit 31 -> imm[12]
@@ -334,13 +334,13 @@ void pipelineSimulation::execute(){
                     //STORE FUNCTION HERE
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            simMemory.storeByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case HalfWord:
-                            simMemory.storeHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case Word:
-                            simMemory.storeWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         default:
                             break;
@@ -350,13 +350,13 @@ void pipelineSimulation::execute(){
                     //LOAD FUNCTION HERE
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            exeData.wb_int_val = simMemory.loadByte(int_alu_val);
+                            exeData.wb_int_val = simMemory.tryLoadByte(int_alu_val);
                             break;
                         case HalfWord:
-                            exeData.wb_int_val = simMemory.loadHalfWord(int_alu_val);
+                            exeData.wb_int_val = simMemory.tryLoadHalfWord(int_alu_val);
                             break;
                         case Word:
-                            exeData.wb_int_val = simMemory.loadWord(int_alu_val);
+                            exeData.wb_int_val = simMemory.tryLoadWord(int_alu_val);
                             break;
                         default:
                             break;
@@ -380,11 +380,11 @@ void pipelineSimulation::execute(){
                 int_demux_store_line = int_alu_val;
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     //STORE FUNCTION HERE
-                    simMemory.storeWord(int_alu_val, float(float_reg_bank[assemblyCode.rs2]));
+                    simMemory.tryStoreWord(int_alu_val, float(float_reg_bank[assemblyCode.rs2]));
                 }
                 else{
                     //LOAD FUNCTION HERE
-                    exeData.wb_int_val = simMemory.loadWord(int_alu_val);
+                    exeData.wb_int_val = simMemory.tryLoadWord(int_alu_val);
                 }
             }
             else{
