@@ -324,7 +324,8 @@ void CpuSim::decode(){
             printDebug("ERR: Decoded unknown instruction with opcode: " + std::to_string(assemblyCode.opcode), 0);
             break;
     }
-    if(assemblyCode.opcode != UTYPE) assemblyCode.imm = signExtend(assemblyCode.imm, 12);
+    if((assemblyCode.opcode != UTYPE) && (assemblyCode.opcode != JTYPE)) assemblyCode.imm = signExtend(assemblyCode.imm, 12);
+    else if(assemblyCode.opcode == JTYPE) assemblyCode.imm = signExtend(assemblyCode.imm, 20);
 }
 
 void CpuSim::execute(){
