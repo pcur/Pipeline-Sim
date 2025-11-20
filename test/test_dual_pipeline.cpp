@@ -18,6 +18,7 @@ int main(){
     printDebug("Setting up instruction queue", 1);
     fill_queue("instructions.txt", instrQ, 10);
     load_mem_array(memBus, 0x0000, 0x0027, instrQ);
+    load_mem_array(memBus, 0x0100, 0x0127, instrQ);
 
     // Initialize pipeline simulations
     printDebug("Creating pipeline simulations", 1);
