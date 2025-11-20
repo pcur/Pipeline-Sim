@@ -6,12 +6,16 @@ Tests can be compiled with `compile-tests.sh`, may require you to run `chmod +x 
 
 ### Contributors and Contributions
 Patrick Cur, Team Member
-- Priority queue for pipelined cpu sim including halts, stalls
+- Priority queue for pipelined cpu sim including halts, stalls pre final project
 - Decode for U, I types
+- Fetch stage of pipeline
 - Memory class
 - Memory bus & arbitration
-- Assignment adaptation (for ex, decode.cpp for a clean demo of A3, or initalization of data for final)
-- Testing & debugging
+- Separation of old pipelinesim class into CpuSim and PipelineSim (event scheduler) classes
+- Dynamic debug printouts
+- Assignment adaptation (assignment specific runners/main functions)
+- Test scripting and compile scripts
+- Testing & debugging code
 - Presenting Demos
 
 Joshua Kauffman, Team Member
@@ -19,12 +23,15 @@ Joshua Kauffman, Team Member
 - RISC-V knower
 - instruction loading
 - Pipeline architecture setup
-- Fetch, Execute, Store stages of pipeline
+- ALU functions
+- Execute, Store stages of pipeline
 - Decode for R, S, B, J types
+- Translation of instructions from C or Asm to binaries
 - Testing & debugging
 - Presenting Demos
 
 Matthew Montano, Team Member
 - Presentation of Ice Cream Sim
+- PipelineSim stalls
 
 Specific contribution history (commits) can also be found on the github.
