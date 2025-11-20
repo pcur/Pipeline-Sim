@@ -72,7 +72,7 @@ struct pipelineState{
 
 class CpuSim {
     public:
-        CpuSim(MemoryBus& memBus, uint32_t offset, uint32_t sp) : pipelineBusy(0), scalar(0), simMemory(memBus), pc(offset) {int_reg_bank[2] = sp;}
+        CpuSim(MemoryBus& memBus, uint32_t offset, uint32_t sp) : pipelineBusy(0), scalar(0), simMemory(memBus), pc(offset), pc_offset(offset) {int_reg_bank[2] = sp;}
         bool notStalled();
         void fetch();
         void decode();
@@ -82,11 +82,14 @@ class CpuSim {
         float alu(float reg1_val, float reg2_val, int function_code);
 
         uint32_t pc;
+        uint32_t pc_offset;
+        uint32_t instr_fetch_pc;  // PC value when instruction was fetched
         pipelineState   state;
         uint32_t        instruction;
         uint32_t        jumpval;
         uint32_t        stallTime;
         bool            pipelineBusy;
+        bool            shouldHalt = false;
         float           scalar;
         unsigned int    array[160];
         riscvInstr      assemblyCode;

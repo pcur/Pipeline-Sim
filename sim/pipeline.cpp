@@ -8,7 +8,7 @@ bool pipelineSimulation::notStalled(){
 }
 
 void pipelineSimulation::halt(){
-    printDebug("Halting pipeline simulation", 1);
+    printDebug("Halting pipeline simulation", 0);
     while(!eventQueue.empty()){
         event * nextEvent = eventQueue.top();
         eventQueue.pop();
@@ -47,6 +47,9 @@ void pipelineSimulation::tick(){
     std::stringstream ss;
     ss << "\n========={ Simulation Tick: " << clk << " for cpu: " << simName << " }=========";
     printDebug(ss.str(), 1);
+    if (clk % 10 == 0){
+        endCyclePrintOut();
+    }
     while(eventQueue.top()->time <= clk) {
             printDebug("Processing event scheduled for time: " + std::to_string(eventQueue.top()->time), 5);
             // Process all events scheduled for this clock cycle in order of time
@@ -57,10 +60,7 @@ void pipelineSimulation::tick(){
             eventQueue.pop();
             delete nextEvent;
     }
-    if (clk % 10 == 0){
-        endCyclePrintOut();
-    }
-    if(halted){
+    if(halted || cpuInstance->shouldHalt){
         cpuInstance->state.fetchState = "HALTED";
         cpuInstance->state.decodeState = "HALTED";
         cpuInstance->state.executeState = "HALTED";
@@ -124,6 +124,14 @@ void executeEvent::processEvent(){
 void storeEvent::processEvent(){
     printDebug("Processing store event at time: " + std::to_string(pipelineSim->clk), 3);
     pipelineSim->cpuInstance->store();
+    
+    // Check if halt was signaled during store stage
+    if(pipelineSim->cpuInstance->shouldHalt) {
+        printDebug("Halt signal detected, stopping pipeline", 1);
+        pipelineSim->halted = true;
+        return;
+    }
+    
     printDebug("Scheduling hazard event at tick " + std::to_string(pipelineSim->clk + 5), 4);
     pipelineSim->scheduleEvent(new hazardEvent(pipelineSim->clk + 5, pipelineSim));
 }

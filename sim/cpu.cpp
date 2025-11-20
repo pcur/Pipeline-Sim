@@ -48,6 +48,14 @@ static inline int32_t signExtend(uint32_t value, int bits) {
 
 void CpuSim::fetch(){
     printDebug("Fetching instruction at PC: " + std::to_string(pc), 2);
+    
+    // Don't fetch if halt has been signaled
+    if(shouldHalt) {
+        printDebug("Halt signal received, skipping fetch", 1);
+        state.fetchState = "HALTED";
+        return;
+    }
+    
     bool loadSuccess;
      std::tie(instruction, loadSuccess) = simMemory.tryLoadWord(pc);
      if (!loadSuccess) {
@@ -55,6 +63,7 @@ void CpuSim::fetch(){
          // Handle stall or retry logic as needed
          return;
      }
+     instr_fetch_pc = pc;  // Save the PC value for this instruction
      state.fetchState = std::bitset<32>(instruction).to_string();
      std::stringstream ss;
      ss << "Fetched instruction 0b" << std::bitset<32>(instruction).to_string() << " at PC " << pc;
@@ -491,6 +500,12 @@ void CpuSim::execute(){
 
 void CpuSim::store(){
     printDebug("Entering store stage for write-back", 2);
+
+    // Check if the instruction's fetch PC - offset == 0x94 (halt condition)
+    if((instr_fetch_pc - pc_offset) >= 0x94){
+        printDebug("Halt condition reached (instruction fetch PC offset = 0x94), initiating shutdown", 0);
+        shouldHalt = true;
+    }
 
     state.storeState = state.executeState;
     printDebug("Store stage processing write-back for register " + std::to_string(exeData.wb_reg), 1);
