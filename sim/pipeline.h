@@ -33,12 +33,12 @@ struct eventComparator {
 
 class simulation {
   public:
-    simulation () : clk (0.0), eventQueue () { }
+    simulation () : clk (0), eventQueue () { }
     void run ();
     void scheduleEvent (event * newEvent) {
       eventQueue.push(newEvent);
     }
-    float clk;
+    uint32_t clk;
   protected:
     std::priority_queue<event*, std::vector<event *, std::allocator<event*> >, eventComparator> eventQueue;
 };

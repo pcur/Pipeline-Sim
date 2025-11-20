@@ -114,10 +114,11 @@ MemoryBus::~MemoryBus() {
 }
 
 void MemoryBus::tick(int num_ticks) {
+    printDebug("Ticking memory bus", 2);
     for (int t = 0; t < num_ticks; ++t) {
         for (size_t i = 0; i < ticks_until_free.size(); ++i) { //tick for each bank
             if(bank_locks[i] == true) {
-                printDebug("Bank " + std::to_string(i) + " ticks until free before tick: " + std::to_string(ticks_until_free[i]), 2);
+                printDebug("Bank " + std::to_string(i) + " ticks until free before tick: " + std::to_string(ticks_until_free[i]), 5);
                 if (ticks_until_free[i] > 0) {
                     --ticks_until_free[i];
                     printDebug("Bank " + std::to_string(i) + " ticks until free: " + std::to_string(ticks_until_free[i]), 3);
