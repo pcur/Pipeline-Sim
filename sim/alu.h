@@ -4,7 +4,7 @@
 #include <iostream>
 #include "helpers.h"
 #include "cpu.h"
-
+#define FETCH_OFFSET 0
 // For the arithmetic int alu operations
 #define ADD     0b0000000000
 #define SUB     0b0100000000
