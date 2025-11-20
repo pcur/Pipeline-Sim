@@ -321,6 +321,21 @@ void CpuSim::decode(){
 
         case NOP: // no op
             state.decodeState    = "NO_OP";
+            // Gotta make everything 0
+            assemblyCode.funct7  = 0;
+            assemblyCode.rs2     = 0;
+            assemblyCode.rs1     = 0;
+            assemblyCode.funct3  = 0;
+            assemblyCode.rd      = 0;
+            assemblyCode.imm     = 0;
+            assemblyCode.alucode = 0;
+            assemblyCode.pc_enable = 0;
+            assemblyCode.imm_sel = 0;
+            assemblyCode.store_sel = 0;
+            assemblyCode.mem_load_sel = 0;
+            assemblyCode.wb_enable = 0;
+            assemblyCode.rw_enable = 0;
+            assemblyCode.float_regs = 0;
             printDebug("Decoded NOP instruction", 1);
             break;
 

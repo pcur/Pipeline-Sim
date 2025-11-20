@@ -58,7 +58,7 @@ void pipelineSimulation::tick(){
             delete nextEvent;
     }
     if (clk % 10 == 0){
-    endCyclePrintOut();
+        endCyclePrintOut();
     }
     if(halted){
         cpuInstance->state.fetchState = "HALTED";

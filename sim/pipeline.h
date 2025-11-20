@@ -44,7 +44,7 @@ class simulation {
 
 class pipelineSimulation : public simulation {
     public:
-        pipelineSimulation(CpuSim* cpu1, std::string simName) : simulation(), cpuInstance(cpu1), simName(simName){}
+        pipelineSimulation(CpuSim* cpu1, std::string simName) : simulation(), cpuInstance(cpu1), simName(simName), stallTime(0){}
         bool notStalled();
         void start();
         void halt();
@@ -54,7 +54,7 @@ class pipelineSimulation : public simulation {
 
         CpuSim * cpuInstance;
         std::string simName;
-        int stallTime = 0;
+        uint32_t stallTime;
         bool pipelineBusy = false;
         bool halted = false;
 };

@@ -10,13 +10,13 @@ int main(){
     debug = 0;
     printDebug("Setting up Pipeline test...", 0);
     printDebug("Initializing MemoryBus", 1);
-    MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
+    MemoryBus memBus = MemoryBus(0x01FF, 0x03FF, 0x13FF);
     printDebug("Creating CpuSim instance", 1);
-    CpuSim cpu1 = CpuSim(memBus,0,0x02FF);
+    CpuSim cpu1 = CpuSim(memBus,0,0x0300);
 
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
-    fill_queue("instructions/instructions.txt", instrQ, 10);
+    fill_queue("instructions/cpu0_instructions.txt", instrQ, 40);
     load_mem_array(memBus, 0x0000, 0x0027, instrQ);
 
     // Initialize pipeline simulations
