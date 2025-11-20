@@ -3,27 +3,27 @@
 # Function to compile test_memory
 compile_memory() {
     echo -e "\033[1;34mCompiling test_memory...\033[0m"
-    g++ -std=c++23 sim/memory.cpp test/test_memory.cpp -o test_memory.o
+    g++ -std=c++23 sim/memory.cpp test/test_memory.cpp -o run/test_memory.o
 }
 
 # Function to compile test_alu
 compile_alu() {
     echo -e "\033[1;34mCompiling test_alu...\033[0m"
-    g++ -std=c++23 sim/alu.cpp test/test_alu.cpp -o test_alu.o
+    g++ -std=c++23 sim/alu.cpp test/test_alu.cpp -o run/test_alu.o
 }
 
 # Function to compile test_cpu
 compile_cpu() {
     echo -e "\033[1;34mCompiling test_cpu...\033[0m"
-    g++ -std=c++23 sim/alu.cpp sim/memory.cpp sim/cpu.cpp test/test_cpu.cpp -o test_cpu.o
+    g++ -std=c++23 sim/alu.cpp sim/memory.cpp sim/cpu.cpp test/test_cpu.cpp -o run/test_cpu.o
 }
 
 # Function to compile test_pipeline
 compile_pipeline() {
     echo -e "\033[1;34mCompiling test_single_pipeline...\033[0m"
-    g++ -std=c++23 sim/pipeline.cpp sim/alu.cpp sim/memory.cpp sim/cpu.cpp test/test_single_pipeline.cpp -o test_single_pipeline.o
+    g++ -std=c++23 sim/pipeline.cpp sim/alu.cpp sim/memory.cpp sim/cpu.cpp test/test_single_pipeline.cpp -o run/test_single_pipeline.o
     echo -e "\033[1;34mCompiling test_dual_pipeline...\033[0m"
-    g++ -std=c++23 sim/pipeline.cpp sim/alu.cpp sim/memory.cpp sim/cpu.cpp test/test_dual_pipeline.cpp -o test_dual_pipeline.o
+    g++ -std=c++23 sim/pipeline.cpp sim/alu.cpp sim/memory.cpp sim/cpu.cpp test/test_dual_pipeline.cpp -o run/test_dual_pipeline.o
 }
 
 # Function to compile single-cpu
@@ -40,16 +40,17 @@ compile_dual() {
 
 # Display usage information
 usage() {
-    echo "Usage: ./compile-tests.sh [all|test|demo|memory|alu|cpu|pipeline|single|dual]"
+    echo "Usage: ./compile-tests.sh [all|test|demo|memory|cpu|pipeline|single|dual]"
     echo "  all      - Compile everything"
     echo "  test     - Compile only test_memory and test_cpu"
     echo "  demo     - Compile only single-cpu and dual-cpu"
     echo "  memory   - Compile only test_memory"
-    echo "  alu      - Compile only test_alu"
     echo "  cpu      - Compile only test_cpu"
     echo "  pipeline - Compile only test_pipeline"
     echo "  single   - Compile only single-cpu"
     echo "  dual     - Compile only dual-cpu"
+    echo ""
+    echo "Except single and dual, all outfiles will be located in ./run/"
 }
 
 if [ -z "$1" ]; then
@@ -66,7 +67,6 @@ cp *.o ./old 2>/dev/null || true
 case "$MODE" in
     all)
         compile_memory
-        compile_alu
         compile_cpu
         compile_pipeline
         compile_single
@@ -82,9 +82,6 @@ case "$MODE" in
         ;;
     memory)
         compile_memory
-        ;;
-    alu)
-        compile_alu
         ;;
     cpu)
         compile_cpu

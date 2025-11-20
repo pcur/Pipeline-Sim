@@ -1,27 +1,23 @@
-
-#define DEBUG 3
 #include "../sim/cpu.h"
 
 int debug;
-bool halted;
-unsigned int instrQ[10];
 
 int main() {
+    unsigned int instrQ[10];
     printDebug("Setting up CPU test...", 0);
     printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
     printDebug("Creating CpuSim instance", 1);
-    CpuSim cpu1 = CpuSim(memBus);
+    CpuSim cpu1 = CpuSim(memBus,0);
 
     printDebug("Setting up instruction queue", 0);
-    fill_queue("instructions.txt", instrQ, 10);
+    fill_queue("instructions/instructions.txt", instrQ, 10);
     load_mem_array(memBus, 0x0000, 0x0027, instrQ);
 
      // Load instructions into memory
     printDebug("Starting CPU simulation loop", 0);
     printDebug("============================================================", 0);
     cpu1.pc = 0;
-    halted = false;
     for(int w=0;w<6;w++){
     printDebug("FETCH STAGE:", 0);
     cpu1.fetch();

@@ -3,10 +3,10 @@
 #include "../sim/helpers.h"
 
 int debug;
-unsigned int instrQ[10];
 
 int main(){
     debug = 1;
+    unsigned int instrQ[10];
     printDebug("Setting up Pipeline test...", 0);
     printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
@@ -16,7 +16,7 @@ int main(){
 
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
-    fill_queue("instructions.txt", instrQ, 10);
+    fill_queue("instructions/instructions.txt", instrQ, 10);
     load_mem_array(memBus, 0x0000, 0x0027, instrQ);
     load_mem_array(memBus, 0x0100, 0x0127, instrQ);
 
@@ -31,7 +31,7 @@ int main(){
     pipeline1.start();
     pipeline2.start();
     int loop = 0;
-    while(!pipeline1.halted && !pipeline2.halted){
+    while(!pipeline1.halted || !pipeline2.halted){
         if(!pipeline1.halted) pipeline1.tick();
         if(!pipeline2.halted) pipeline2.tick();
         memBus.tick(); //advance memory bus arbitration
