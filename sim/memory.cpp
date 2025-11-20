@@ -132,6 +132,12 @@ void MemoryBus::tick(int num_ticks) {
 }
 
 uint8_t MemoryBus::bank(uint32_t address) {
+    if (address >= mem_size) {
+        std::ostringstream oss;
+        oss << "0x" << std::hex << std::uppercase << address;
+        printDebug("Error: Address " + oss.str() + " is out of bounds for memory size " + std::to_string(mem_size), 0);
+        return 0; // Default to bank 0 on error
+    }
     for (size_t i = 0; i < bank_offsets.size() - 1; ++i) { //iterate through bank 0 to (n-1)
         if (address < bank_offsets[i+1]) { // if address is before beginning of bank i + 1 (located in)
             std::ostringstream oss;
@@ -213,6 +219,7 @@ std::tuple<uint32_t, bool> MemoryBus::tryLoadWord(uint32_t address) {
         return std::make_tuple(0, false); // Bank is locked, cannot perform load
     }
     ticks_until_free[bank(address)] = LOAD_LATENCY;
+    bank_locks[bank(address)] = true;
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadWord succeeded at address " + oss.str(), 1);
@@ -227,6 +234,7 @@ std::tuple<uint16_t, bool> MemoryBus::tryLoadHalfWord(uint32_t address) {
         return std::make_tuple(0, false); // Bank is locked, cannot perform load
     }
     ticks_until_free[bank(address)] = LOAD_LATENCY;
+    bank_locks[bank(address)] = true;
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadHalfWord succeeded at address " + oss.str(), 1);
@@ -241,6 +249,7 @@ std::tuple<uint8_t, bool> MemoryBus::tryLoadByte(uint32_t address) {
         return std::make_tuple(0, false); // Bank is locked, cannot perform load
     }
     ticks_until_free[bank(address)] = LOAD_LATENCY;
+    bank_locks[bank(address)] = true;
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadByte succeeded at address " + oss.str(), 1);

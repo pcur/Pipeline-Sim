@@ -30,11 +30,6 @@
 #define HalfWord    16
 #define Word        32
 
-extern unsigned int instrQ[10];
-extern uint32_t pc;
-extern bool halted;
-extern int debug;
-
 struct riscvInstr{
     // RISC-V instruction fields
     uint32_t opcode;
@@ -84,7 +79,7 @@ class CpuSim {
         void execute();
         void store();
 
-        int pc;
+        uint32_t pc = 0;
         pipelineState   state;
         uint32_t        instruction;
         uint32_t        jumpval;

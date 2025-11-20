@@ -47,6 +47,7 @@ static inline int32_t signExtend(uint32_t value, int bits) {
 }
 
 void CpuSim::fetch(){
+    printDebug("Fetching instruction at PC: " + std::to_string(pc), 2);
     bool loadSuccess;
      std::tie(instruction, loadSuccess) = simMemory.tryLoadWord(pc);
      if (!loadSuccess) {
@@ -59,6 +60,7 @@ void CpuSim::fetch(){
 }
 
 void CpuSim::decode(){
+    printDebug("Decoding instruction: 0x" + std::to_string(instruction), 2);
     assemblyCode.opcode = instruction & 0x7F;
     
     switch(assemblyCode.opcode){
@@ -329,6 +331,7 @@ void CpuSim::decode(){
 }
 
 void CpuSim::execute(){
+    printDebug("Executing instruction in execute stage", 2);
     state.executeState = "NO_OP";
     if(pipelineBusy) {
         state.executeState = "STALL";
@@ -354,7 +357,7 @@ void CpuSim::execute(){
                 printDebug("Using register value for ALU operand 2: " + std::to_string(int_reg_bank[assemblyCode.rs2]), 2);
                 exeData.alu_val2 = int_reg_bank[assemblyCode.rs2];
             }
-            int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, pc, assemblyCode.imm);
+            int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, &pc, assemblyCode.imm);
             if(assemblyCode.store_sel){
                 printDebug("Store select is enabled", 3);
                 // Store stuff goes here
@@ -413,7 +416,7 @@ void CpuSim::execute(){
             printDebug("Executing FLOAT based operation", 2);
             exeData.alu_val1 = int_reg_bank[assemblyCode.rs1];
             exeData.alu_val2 = assemblyCode.imm;
-            int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, pc, assemblyCode.imm);
+            int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, &pc, assemblyCode.imm);
             if(assemblyCode.store_sel){
                 printDebug("Store select is enabled for FLOAT operation", 3);
                 // Store stuff goes here
@@ -447,13 +450,13 @@ void CpuSim::execute(){
             if(assemblyCode.imm_sel){
                 printDebug("Using immediate value for ALU operand 2: " + std::to_string(assemblyCode.imm), 2);
             // May need to sign extend here. Not sure
-                exeData.alu_val2 = assemblyCode.imm;
+                exeData.alu_float2 = static_cast<float>(assemblyCode.imm);
             }
             else{
                 printDebug("Using register value for ALU operand 2: " + std::to_string(float_reg_bank[assemblyCode.rs2]), 2);
-                exeData.alu_val2 = float_reg_bank[assemblyCode.rs2];
+                exeData.alu_float2 = float_reg_bank[assemblyCode.rs2];
             }
-            float_alu_val = alu(float_reg_bank[assemblyCode.rs1], exeData.alu_val2, assemblyCode.alucode);
+            float_alu_val = alu(float_reg_bank[assemblyCode.rs1], exeData.alu_float2, assemblyCode.alucode);
             // No need for STORE or LOAD, this option should only be reached for Float ALU ops
             exeData.wb_float_val = float_alu_val;
             if(assemblyCode.wb_enable){
@@ -469,7 +472,8 @@ void CpuSim::execute(){
 }
 
 void CpuSim::store(){
-// No store stage actions needed for this simulation
+    printDebug("Entering store stage for write-back", 2);
+
     state.storeState = state.executeState;
     printDebug("Store stage processing write-back for register " + std::to_string(exeData.wb_reg), 1);
     switch(exeData.wb){

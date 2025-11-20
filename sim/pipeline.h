@@ -9,6 +9,7 @@
 #include "../sim/cpu.h"
 
 // Forward declaration
+extern int debug;
 class pipelineSimulation;
 
 class event {
