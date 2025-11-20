@@ -4,8 +4,8 @@
 #include <tuple>
 #include "../sim/helpers.h"
 
-#define LOAD_LATENCY 5 //in ticks
-#define STORE_LATENCY 5 //in ticks
+#define LOAD_LATENCY 0 //in ticks
+#define STORE_LATENCY 0 //in ticks
 #define MEM_SIZE 1024
 
 // Size specifiers for dynamic store/load (in bits)
@@ -63,7 +63,9 @@ private:
     uint8_t bank(uint32_t address);
     std::vector<bool> bank_locks; // Stores the lock status of each bank for arbitration
     // Returns true if the port of a memory address is locked (for arbitration)
-    bool is_locked(uint32_t address); 
+    void lock(uint8_t bank, bool readLatency);
+    void unlock(uint8_t bank);
+    bool is_locked(uint8_t bank); 
     std::vector<uint8_t> ticks_until_free; // Tracks ticks until each bank is free
 };
 

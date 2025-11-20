@@ -18,6 +18,12 @@ int main(){
     fill_queue("instructions/cpu0_instructions.txt", instrQ0, 38);
     load_mem_array(memBus, 0x0000, 0x0093, instrQ0);
 
+    //Populate data vectors in memory with random FP32 values
+    //0x400-0x7FF (ARRAY_A)
+    initialize_mem_array(memBus, 0x400, 0x7FF, 123);
+    //0x800-0xBFF (ARRAY_B)
+    initialize_mem_array(memBus, 0x800, 0xBFF, 456);
+
     // Initialize pipeline simulations
     printDebug("Creating pipeline simulations", 1);
     pipelineSimulation pipeline1 = pipelineSimulation(&cpu1, "CPU1");
@@ -31,7 +37,6 @@ int main(){
         if(!pipeline1.halted) pipeline1.tick();
         memBus.tick(); //advance memory bus arbitration
         tick0++;
-        if (tick0 >= 100) break;
         }
 
     unsigned int cycles0 = tick0 / 10;

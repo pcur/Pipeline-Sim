@@ -22,16 +22,12 @@ int main(){
     fill_queue("instructions/cpu1_instructions.txt", instrQ1, 38);
     load_mem_array(memBus, 0x0100, 0x0193, instrQ1);
 
-        //Populate data vectors in memory with random FP32 values
+    //Populate data vectors in memory with random FP32 values
     //0x400-0x7FF (ARRAY_A)
     initialize_mem_array(memBus, 0x400, 0x7FF, 123);
     //0x800-0xBFF (ARRAY_B)
     initialize_mem_array(memBus, 0x800, 0xBFF, 456);
-    //0xC00-0xFFF (ARRAY_C)
-    initialize_mem_array(memBus, 0xC00, 0xFFF, 789);
-    //0x1000-0x13FF (ARRAY_D)
-    initialize_mem_array(memBus, 0x1000, 0x13FF, 987);
-    
+
     // Initialize pipeline simulations
     printDebug("Creating pipeline simulations", 1);
     pipelineSimulation pipeline1 = pipelineSimulation(&cpu1, "CPU1");
