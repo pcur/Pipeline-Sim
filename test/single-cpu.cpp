@@ -9,7 +9,7 @@ int main(){
     uint32_t instrQ0[38];
     printDebug("Setting up Pipeline test...", 0);
     printDebug("Initializing MemoryBus", 1);
-    MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
+    MemoryBus memBus = MemoryBus(0x00FF, 0x03FF, 0x13FF);
     printDebug("Creating CpuSim instance", 1);
     CpuSim cpu1 = CpuSim(memBus,0, 0x0300);
 

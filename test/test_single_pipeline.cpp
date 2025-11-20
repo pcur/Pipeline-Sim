@@ -16,8 +16,12 @@ int main(){
 
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
-    fill_queue("instructions/cpu0_instructions.txt", instrQ, 40);
-    load_mem_array(memBus, 0x0000, 0x0027, instrQ);
+    fill_queue("instructions/cpu0_instructions.txt", instrQ, 9);
+    load_mem_array(memBus, 0x0000, 0x0093, instrQ);
+
+    //Filling memory array
+    initialize_mem_array(memBus, 0x400, 0x7FF, 123);
+    initialize_mem_array(memBus, 0x800, 0xBFF, 456);
 
     // Initialize pipeline simulations
     printDebug("Creating pipeline simulations", 1);
@@ -32,7 +36,7 @@ int main(){
         if(!pipeline1.halted) pipeline1.tick();
         memBus.tick(); //advance memory bus arbitration
         loop++;
-        if(loop > 51){ //safety break
+        if(loop > 120){ //safety break
             printDebug("ERROR: Simulation loop exceeded 1000 cycles, forcing halt.", 0);
             pipeline1.halt();
         }

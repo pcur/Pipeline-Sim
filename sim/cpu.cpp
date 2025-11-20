@@ -529,5 +529,8 @@ void CpuSim::store(){
             printDebug("Default case used for store write-back switch", 0);
             break;
     }
-        
+}
+
+void CpuSim::flush(){
+    instruction = 0; // Clear current instruction, set it to NO_OP
 }
