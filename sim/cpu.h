@@ -72,14 +72,14 @@ struct pipelineState{
 
 class CpuSim {
     public:
-        CpuSim(MemoryBus& memBus) : pipelineBusy(0), scalar(0), simMemory(memBus), pc(offset) {}
+        CpuSim(MemoryBus& memBus, uint32_t offset) : pipelineBusy(0), scalar(0), simMemory(memBus), pc(offset) {}
         bool notStalled();
         void fetch();
         void decode();
         void execute();
         void store();
 
-        uint32_t pc = offset;
+        uint32_t pc;
         pipelineState   state;
         uint32_t        instruction;
         uint32_t        jumpval;
