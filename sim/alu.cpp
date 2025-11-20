@@ -57,47 +57,47 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         // Branching ALU ops
         // Branch Equal to
         case BEQ:
-            if(reg1_val == reg2_val) pc = pc + imm - FETCH_OFFSET; // -1 Because we add it already in fetch
+            if(reg1_val == reg2_val) pc = instr_fetch_pc + imm - FETCH_OFFSET; // -1 Because we add it already in fetch
             val = pc;
             state.executeState = "BEQ";
             break;
         // Branch Not Equal to
         case BNE:
-            if(reg1_val != reg2_val) pc = pc + imm - FETCH_OFFSET;
+            if(reg1_val != reg2_val) pc = instr_fetch_pc + imm - FETCH_OFFSET;
             val = pc;
             state.executeState = "BNE";
             break;
         // Branch less than
         case BLT:
-            if(reg1_val < reg2_val) pc = pc + imm - FETCH_OFFSET;
+            if(reg1_val < reg2_val) pc = instr_fetch_pc + imm - FETCH_OFFSET;
             val = pc;
             state.executeState = "BLT";
             break;
-        // Branch greater than
+        // Branch greater than or equal
         case BGE:
-            if(reg1_val > reg2_val) pc = pc + imm - FETCH_OFFSET;
+            if(reg1_val >= reg2_val) pc = instr_fetch_pc + imm - FETCH_OFFSET;
             val = pc;
             state.executeState = "BGE";
             break;
-        // Branch Less than or Equal to
+        // Branch Less than or Equal to (unsigned)
         case BLTU:
-            if(reg1_val <= reg2_val) pc = pc + imm - FETCH_OFFSET;
+            if((uint32_t)reg1_val < (uint32_t)reg2_val) pc = instr_fetch_pc + imm - FETCH_OFFSET;
             val = pc;
             state.executeState = "BLTU";
             break;
-        // Branch Greater than or Equal to
+        // Branch Greater than or Equal to (unsigned)
         case BGEU:
-            if(reg1_val >= reg2_val) pc = pc + imm - FETCH_OFFSET;
+            if((uint32_t)reg1_val >= (uint32_t)reg2_val) pc = instr_fetch_pc + imm - FETCH_OFFSET;
             val = pc;
             state.executeState = "BGEU";
             break;
         case JAL:
-            pc = pc + imm - FETCH_OFFSET;
+            pc = instr_fetch_pc + imm - FETCH_OFFSET;
             val = pc;
             state.executeState = "JAL";
             break;
         case JALR:
-            pc = pc + imm - FETCH_OFFSET;
+            pc = instr_fetch_pc + imm - FETCH_OFFSET;
             val = pc;
             state.executeState = "JALR";
             break;
@@ -106,7 +106,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
             state.executeState = "LUI";
             break;
         default:
-            val = pc;
+            val = instr_fetch_pc;
             state.executeState = "????";
             break;
     }

@@ -57,17 +57,17 @@ void CpuSim::fetch(){
     }
     
     bool loadSuccess;
-     std::tie(instruction, loadSuccess) = simMemory.tryLoadWord(pc);
-     if (!loadSuccess) {
-         printDebug("Fetch failed: Memory bank is locked at PC " + std::to_string(pc), 1);
-         // Handle stall or retry logic as needed
-         return;
-     }
-     instr_fetch_pc = pc;  // Save the PC value for this instruction
-     state.fetchState = std::bitset<32>(instruction).to_string();
-     std::stringstream ss;
-     ss << "Fetched instruction 0b" << std::bitset<32>(instruction).to_string() << " at PC " << pc;
-     printDebug(ss.str(), 1);
+    std::tie(instruction, loadSuccess) = simMemory.tryLoadWord(pc);
+    if (!loadSuccess) {
+        printDebug("Fetch failed: Memory bank is locked at PC " + std::to_string(pc), 1);
+        // Handle stall or retry logic as needed
+        return;
+    }
+    instr_fetch_pc = pc;  // Save the PC value for this instruction
+    state.fetchState = std::bitset<32>(instruction).to_string();
+    std::stringstream ss;
+    ss << "Fetched instruction 0b" << std::bitset<32>(instruction).to_string() << " at PC " << pc;
+    printDebug(ss.str(), 1);
     pc+=4;
 }
 
@@ -501,8 +501,8 @@ void CpuSim::execute(){
 void CpuSim::store(){
     printDebug("Entering store stage for write-back", 2);
 
-    // Check if the instruction's fetch PC - offset == 0x94 (halt condition)
-    if((instr_fetch_pc - pc_offset) >= 0x94){
+    // Check if the instruction's fetch PC - offset == 0x094 (halt condition)
+    if((instr_fetch_pc - pc_offset) >= 0x094){
         printDebug("Halt condition reached (instruction fetch PC offset = 0x94), initiating shutdown", 0);
         shouldHalt = true;
     }
@@ -526,7 +526,7 @@ void CpuSim::store(){
             exeData.wb = 0;
             break;
         default:
-            printDebug("No write back required for instruction", 0);
+            printDebug("Default case used for store write-back switch", 0);
             break;
     }
         
