@@ -1,10 +1,6 @@
 #include "../sim/pipeline.h"
 #include "../sim/helpers.h"
 
-uint32_t pc;
-uint32_t int_reg_bank[32];
-float   float_reg_bank[32];
-
 bool pipelineSimulation::notStalled(){
     printDebug("Checking if pipeline is stalled: " + std::to_string(pipelineBusy), 2);
     if(pipelineBusy) return false;
@@ -19,7 +15,6 @@ void pipelineSimulation::halt(){
         delete nextEvent;
     }
     printDebug("All events removed from queue.", 1);
-    pc = 5;
     halted = true;
 }
 
@@ -39,13 +34,20 @@ void pipelineSimulation::debugPrintout(){
             }
         }
 }
-void pipelineSimulation::run(){
+
+//start new simulation with externally-driven clock
+void pipelineSimulation::start(){
     printDebug("Starting pipeline simulation runtime loop", 2);
+    scheduleEvent(new fetchEvent(clk, cpuInstance, this));
+}
+void pipelineSimulation::run(){
+    printDebug("Prepping pipeline simulation for cpu " + simName, 2);
     scheduleEvent(new fetchEvent(clk, cpuInstance, this));
 
     while(!eventQueue.empty()){ //clock cycle loop
         printDebug("Starting clock cycle loop with clock: " + std::to_string(clk), 3);
         while(eventQueue.top()->time <= clk + 10) {
+            printDebug("Processing all events scheduled for time: " + std::to_string(eventQueue.top()->time), 4);
             // Process all events scheduled for this clock cycle in order of time
             event * nextEvent = eventQueue.top();
             nextEvent->processEvent();
@@ -89,6 +91,51 @@ void pipelineSimulation::run(){
     }
 }
 
+void pipelineSimulation::tick(){
+    printDebug("Ticking cpu " + simName + " on clock tick: " + std::to_string(clk), 3);
+    while(eventQueue.top()->time <= clk + 10) {
+            printDebug("Processing event scheduled for time: " + std::to_string(eventQueue.top()->time), 4);
+            // Process all events scheduled for this clock cycle in order of time
+            event * nextEvent = eventQueue.top();
+            nextEvent->processEvent();
+            if(halted) break;
+            //may need stall logic here
+            eventQueue.pop();
+            delete nextEvent;
+    }
+    
+    debugPrintout();
+
+    if(halted){
+        state.fetchState = "HALTED";
+        state.decodeState = "HALTED";
+        state.executeState = "HALTED";
+        state.storeState = "HALTED";
+        printDebug("Halting simulation", 1);
+        std::stringstream ss;
+        ss << "Clock Cycle: " << clk << " Fetch: " << state.fetchState << " Decode: " << state.decodeState << " Execute: " << state.executeState << " Store: " << state.storeState << " Value in x1: " << cpuInstance->x1;
+        printDebug(ss.str(), 0);
+        halt();
+    }
+    else{
+        if(stallTime > 0) {
+            pipelineBusy = 1;
+            printDebug("Pipeline is stalled for " + std::to_string(stallTime) + " more cycles", 1);
+        }
+        if(notStalled()){
+            scheduleEvent(new fetchEvent(clk + 19, cpuInstance, this));
+            printDebug("Pipeline is not stalled, scheduling new fetch event", 1);
+        }
+        else { 
+            printDebug("Pipeline is stalled, not scheduling new fetch event", 1);
+            stallTime--;
+            state.executeState = "STALL";
+            //scheduleEvent(new executeEvent(clk + 1.1));
+            if(stallTime <= 0) pipelineBusy = 0;
+        }
+        clk++; //increment internal clock
+    }
+}
 void fetchEvent::processEvent(){
     printDebug("Processing fetch event at time: " + std::to_string(pipelineSim->clk), 3);
     cpuInstance->fetch();

@@ -8,6 +8,9 @@
 #include <cstdint>
 #include "../sim/cpu.h"
 
+// Forward declaration
+class pipelineSimulation;
+
 class event {
   public:
       // Construct sets time of event.
@@ -41,16 +44,20 @@ class simulation {
 
 class pipelineSimulation : public simulation {
     public:
-        pipelineSimulation(CpuSim* cpu1) : simulation(), cpuInstance(cpu1), stallTime(0), pipelineBusy(0) {}
+        pipelineSimulation(CpuSim* cpu1, std::string simName) : simulation(), cpuInstance(cpu1), simName(simName){}
         bool notStalled();
+        void start();
         void halt();
         void run ();
+        void tick();
         void debugPrintout();
 
         CpuSim * cpuInstance;
+        std::string simName;
         pipelineState state;
-        int stallTime;
-          bool pipelineBusy;
+        int stallTime = 0;
+        bool pipelineBusy = false;
+        bool halted = false;
 };
 
 class fetchEvent : public event {
