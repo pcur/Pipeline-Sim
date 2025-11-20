@@ -35,7 +35,9 @@ int main(){
         }
 
     unsigned int cycles0 = tick0 / 10;
+    printDebug("Cycles: " + std::to_string(cycles0), 1);
     unsigned int instructionCt0 = sizeof(instrQ0) / sizeof(instrQ0[0]);
+    printDebug("Instructions: " + std::to_string(instructionCt0), 1);
     float calculated_cpi0 = cycles0 / instructionCt0;
     printDebug("CPU simulation complete.", 0);
     printDebug("CPU0 CPI: " + std::to_string(calculated_cpi0), 0);
