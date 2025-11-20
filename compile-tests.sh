@@ -20,8 +20,8 @@ compile_cpu() {
 
 # Function to compile test_pipeline
 compile_pipeline() {
-    echo -e "\033[1;34mCompiling test_pipelined...\033[0m"
-    g++ -std=c++23 sim/pipeline.cpp sim/alu.cpp sim/memory.cpp sim/cpu.cpp test/test_pipeline.cpp -o test_pipeline.o
+    echo -e "\033[1;34mCompiling test_pipeline...\033[0m"
+    g++ -std=c++23 sim/pipeline.cpp sim/alu.cpp sim/memory.cpp sim/cpu.cpp test/test_dual_pipeline.cpp -o test_pipeline.o
 }
 
 # Function to compile single-cpu

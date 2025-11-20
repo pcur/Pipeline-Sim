@@ -12,14 +12,13 @@ int main(){
     printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
     printDebug("Creating CpuSim instance", 1);
-    CpuSim cpu1 = CpuSim(memBus);
+    CpuSim cpu1 = CpuSim(memBus,0);
 
     printDebug("Setting up instruction queue", 0);
     fill_queue("instructions.txt", instrQ, 10);
     load_mem_array(memBus, 0x0000, 0x0027, instrQ);
 
     printDebug("Creating Pipeline Simulation instance",0);
-    cpu1.pc = 0;
     pipelineSimulation singleSim(cpu1);
      // Load instructions into memory
     printDebug("Starting CPU simulation loop", 0);
