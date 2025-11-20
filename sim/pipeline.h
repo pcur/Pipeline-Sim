@@ -41,7 +41,7 @@ class simulation {
 
 class pipelineSimulation : public simulation {
     public:
-        pipelineSimulation() : simulation() {}
+        pipelineSimulation(CpuSim* cpu1) : simulation(), cpuInstance(cpu1), stallTime(0), pipelineBusy(0) {}
         bool notStalled();
         void halt();
         void run ();
@@ -50,7 +50,7 @@ class pipelineSimulation : public simulation {
         CpuSim * cpuInstance;
         pipelineState state;
         int stallTime;
-        bool pipelineBusy;
+          bool pipelineBusy;
 };
 
 class fetchEvent : public event {
