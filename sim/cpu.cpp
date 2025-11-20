@@ -55,7 +55,10 @@ void CpuSim::fetch(){
          // Handle stall or retry logic as needed
          return;
      }
-     printDebug("Fetched instruction 0x" + std::to_string(instruction) + " at PC " + std::to_string(pc), 1);
+     state.fetchState = std::bitset<32>(instruction).to_string();
+     std::stringstream ss;
+     ss << "Fetched instruction 0b" << std::bitset<32>(instruction).to_string() << " at PC " << pc;
+     printDebug(ss.str(), 1);
     pc+=4;
 }
 

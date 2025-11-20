@@ -113,7 +113,7 @@ int alu(int reg1_val, int reg2_val, int function_code, uint32_t* progCount, int 
             break;
     }
     debugStr = "state: " + state + ", alu_val1: " + std::to_string(val);
-    printDebug(debugStr, 0);
+    printDebug(debugStr, 1);
     return val;
 }
 
@@ -137,6 +137,6 @@ float alu(float reg1_val, float reg2_val, int function_code){
             break;
     }
     debugStr = "state: " + state + ", alu_val1: " + std::to_string(val);
-    printDebug(debugStr, 0);
+    printDebug(debugStr, 1);
     return val;
 }

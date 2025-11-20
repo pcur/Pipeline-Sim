@@ -18,11 +18,11 @@ void pipelineSimulation::halt(){
     halted = true;
 }
 
-void pipelineSimulation::debugPrintout(){
+void pipelineSimulation::endCyclePrintOut(){
     // Debug output for each clock cycle
         if(debug == 1){
             std::stringstream ss;
-            ss << simName << " Clock Cycle: " << clk << " Fetch: " << state.fetchState << " Decode: " << state.decodeState << " Execute: " << state.executeState << " Store: " << state.storeState;
+            ss << simName << " Clock Cycle: " << clk << " Fetch: " << cpuInstance->state.fetchState << " Decode: " << cpuInstance->state.decodeState << " Execute: " << cpuInstance->state.executeState << " Store: " << cpuInstance->state.storeState;
             printDebug(ss.str(), 0);
         }
         if(debug == 2){
@@ -44,8 +44,8 @@ void pipelineSimulation::tick(){
     std::stringstream ss;
     ss << "\n========={ Simulation Tick: " << clk << " for cpu: " << simName << " }=========";
     printDebug(ss.str(), 1);
-    while(eventQueue.top()->time <= clk + 10) {
-            printDebug("Processing event scheduled for time: " + std::to_string(eventQueue.top()->time), 4);
+    while(eventQueue.top()->time <= clk) {
+            printDebug("Processing event scheduled for time: " + std::to_string(eventQueue.top()->time), 5);
             // Process all events scheduled for this clock cycle in order of time
             event * nextEvent = eventQueue.top();
             nextEvent->processEvent();
@@ -55,16 +55,16 @@ void pipelineSimulation::tick(){
             delete nextEvent;
     }
     if (clk % 10 == 0){
-    debugPrintout();
+    endCyclePrintOut();
     }
     if(halted){
-        state.fetchState = "HALTED";
-        state.decodeState = "HALTED";
-        state.executeState = "HALTED";
-        state.storeState = "HALTED";
+        cpuInstance->state.fetchState = "HALTED";
+        cpuInstance->state.decodeState = "HALTED";
+        cpuInstance->state.executeState = "HALTED";
+        cpuInstance->state.storeState = "HALTED";
         printDebug("Halting simulation", 1);
         std::stringstream ss;
-        ss << "Simulation Tick: " << clk << " Fetch: " << state.fetchState << " Decode: " << state.decodeState;
+        ss << "Simulation Tick: " << clk << " Fetch: " << cpuInstance->state.fetchState << " Decode: " << cpuInstance->state.decodeState;
         printDebug(ss.str(), 0);
         halt();
     }
@@ -75,14 +75,14 @@ void pipelineSimulation::tick(){
         }
         if(notStalled()){
             if (clk % 10 == 9){ // only schedule fence once per cpu cycle{}
-            scheduleEvent(new fetchEvent(clk + 9, cpuInstance, this));
+            scheduleEvent(new fetchEvent(clk + 10, cpuInstance, this));
             printDebug("Pipeline is not stalled, scheduling new fetch event", 1);
         }
         }
         else { 
             printDebug("Pipeline is stalled, not scheduling new fetch event", 1);
             stallTime--;
-            state.executeState = "STALL";
+            cpuInstance->state.executeState = "STALL";
             //scheduleEvent(new executeEvent(clk + 1.1));
             if(stallTime <= 0) pipelineBusy = 0;
         }
@@ -100,25 +100,29 @@ void pipelineSimulation::run(){
 void fetchEvent::processEvent(){
     printDebug("Processing fetch event at time: " + std::to_string(pipelineSim->clk), 3);
     cpuInstance->fetch();
-    pipelineSim->scheduleEvent(new decodeEvent(pipelineSim->clk + 17 + cpuInstance->stallTime, cpuInstance, pipelineSim));
+    printDebug("Scheduling decode event at tick " + std::to_string(pipelineSim->clk + 8 + cpuInstance->stallTime), 4);
+    pipelineSim->scheduleEvent(new decodeEvent(pipelineSim->clk + 8 + cpuInstance->stallTime, cpuInstance, pipelineSim));
 }
 
 void decodeEvent::processEvent(){
     printDebug("Processing decode event at time: " + std::to_string(pipelineSim->clk), 3);
     cpuInstance->decode();
-    pipelineSim->scheduleEvent(new executeEvent(pipelineSim->clk + 15 + cpuInstance->stallTime, cpuInstance, pipelineSim));
+    printDebug("Scheduling execute event at tick " + std::to_string(pipelineSim->clk + 7 + cpuInstance->stallTime), 4);
+    pipelineSim->scheduleEvent(new executeEvent(pipelineSim->clk + 7 + cpuInstance->stallTime, cpuInstance, pipelineSim));
 }
 
 void executeEvent::processEvent(){
     printDebug("Processing execute event at time: " + std::to_string(pipelineSim->clk), 3);
     cpuInstance->execute();
-    pipelineSim->scheduleEvent(new storeEvent(pipelineSim->clk + 13 + cpuInstance->stallTime, cpuInstance, pipelineSim));
+    printDebug("Scheduling store event at tick " + std::to_string(pipelineSim->clk + 6 + cpuInstance->stallTime), 4);
+    pipelineSim->scheduleEvent(new storeEvent(pipelineSim->clk + 6 + cpuInstance->stallTime, cpuInstance, pipelineSim));
 }
 
 void storeEvent::processEvent(){
     printDebug("Processing store event at time: " + std::to_string(pipelineSim->clk), 3);
     cpuInstance->store();
-    pipelineSim->scheduleEvent(new hazardEvent(pipelineSim->clk + 11, cpuInstance, pipelineSim));
+    printDebug("Scheduling hazard event at tick " + std::to_string(pipelineSim->clk + 5), 4);
+    pipelineSim->scheduleEvent(new hazardEvent(pipelineSim->clk + 5, cpuInstance, pipelineSim));
 }
 
 void hazardEvent::processEvent(){
