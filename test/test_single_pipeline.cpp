@@ -16,7 +16,7 @@ int main(){
 
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
-    fill_queue("instructions.txt", instrQ, 10);
+    fill_queue("instructions/instructions.txt", instrQ, 10);
     load_mem_array(memBus, 0x0000, 0x0027, instrQ);
 
     // Initialize pipeline simulations

@@ -11,7 +11,7 @@ int main(){
     printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
     printDebug("Creating CpuSim instance", 1);
-    CpuSim cpu1 = CpuSim(memBus,0);
+    CpuSim cpu1 = CpuSim(memBus,0, 0x2FF);
 
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
