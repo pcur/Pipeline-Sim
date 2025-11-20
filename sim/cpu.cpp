@@ -360,7 +360,7 @@ void CpuSim::execute(){
                 printDebug("Using register value for ALU operand 2: " + std::to_string(int_reg_bank[assemblyCode.rs2]), 2);
                 exeData.alu_val2 = int_reg_bank[assemblyCode.rs2];
             }
-            int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, &pc, assemblyCode.imm);
+            int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, assemblyCode.imm);
             if(assemblyCode.store_sel){
                 printDebug("Store select is enabled", 3);
                 // Store stuff goes here
@@ -419,7 +419,7 @@ void CpuSim::execute(){
             printDebug("Executing FLOAT based operation", 2);
             exeData.alu_val1 = int_reg_bank[assemblyCode.rs1];
             exeData.alu_val2 = assemblyCode.imm;
-            int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, &pc, assemblyCode.imm);
+            int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, assemblyCode.imm);
             if(assemblyCode.store_sel){
                 printDebug("Store select is enabled for FLOAT operation", 3);
                 // Store stuff goes here

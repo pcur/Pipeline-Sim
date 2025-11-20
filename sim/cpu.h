@@ -78,6 +78,8 @@ class CpuSim {
         void decode();
         void execute();
         void store();
+        int alu(int reg1_val, int reg2_val, int function_code, int imm);
+        float alu(float reg1_val, float reg2_val, int function_code);
 
         uint32_t pc;
         pipelineState   state;

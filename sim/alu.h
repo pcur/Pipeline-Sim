@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include "helpers.h"
+#include "cpu.h"
 
 // For the arithmetic int alu operations
 #define ADD     0b0000000000
@@ -34,7 +35,3 @@
 // For the floating point alu
 #define FADDS   0b0000000000
 #define FSUBS   0b0000100000
-
-int alu(int reg1_val, int reg2_val, int function_code, uint32_t* progCount, int imm);
-
-float alu(float reg1_val, float reg2_val, int function_code);
