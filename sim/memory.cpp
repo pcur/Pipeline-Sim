@@ -154,7 +154,7 @@ void MemoryBus::tick(int num_ticks) {
                 if (ticks_until_free[i] > 0) {
                     --ticks_until_free[i];
                     printDebug("Bank " + std::to_string(i) + " ticks until free: " + std::to_string(ticks_until_free[i]), 3);
-                    if (ticks_until_free[i] == 0) {
+                    if (ticks_until_free[i] <= 0) {
                         unlock(static_cast<uint8_t>(i)); // Unlock the bank when ticks reach zero
                         printDebug("Bank " + std::to_string(i) + " unlocked", 1);
                     }
