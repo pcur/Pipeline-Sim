@@ -15,7 +15,7 @@ class pipelineSimulation;
 class event {
   public:
       // Construct sets time of event.
-    event (float t, std::string n, pipelineSimulation* pS) : time (t), name(n), pipelineSim(pS) { }
+    event (uint32_t t, std::string n, pipelineSimulation* pS) : time (t), name(n), pipelineSim(pS) { }
 
       // Execute event by invoking this method.
     virtual void processEvent () = 0;
