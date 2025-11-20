@@ -14,17 +14,29 @@ int main(){
     printDebug("Creating CpuSim instance", 1);
     CpuSim cpu1 = CpuSim(memBus,0);
 
-    printDebug("Setting up instruction queue", 0);
+    // Load instruction queue from file and into memory
+    printDebug("Setting up instruction queue", 1);
     fill_queue("instructions.txt", instrQ, 10);
     load_mem_array(memBus, 0x0000, 0x0027, instrQ);
 
-    printDebug("Creating Pipeline Simulation instance",0);
-    pipelineSimulation singleSim(cpu1);
-     // Load instructions into memory
+    // Initialize pipeline simulations
+    printDebug("Creating pipeline simulations", 1);
+    pipelineSimulation pipeline1 = pipelineSimulation(&cpu1, "CPU1");
+
+    //begin cpu simulation, driving clock externally
     printDebug("Starting CPU simulation loop", 0);
     printDebug("============================================================", 0);
-    halted = false;
-    singleSim.run();
-
+    pipeline1.start();
+    int loop = 0;
+    while(!pipeline1.halted){
+        if(!pipeline1.halted) pipeline1.tick();
+        memBus.tick(); //advance memory bus arbitration
+        loop++;
+        if(loop > 21){ //safety break
+            printDebug("ERROR: Simulation loop exceeded 1000 cycles, forcing halt.", 0);
+            pipeline1.halt();
+        }
+    }
+    printDebug("CPU simulation complete", 0);
     return 0;
 }

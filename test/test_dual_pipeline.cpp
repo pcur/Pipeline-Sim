@@ -38,7 +38,8 @@ int main(){
         loop++;
         if(loop > 21){ //safety break
             printDebug("ERROR: Simulation loop exceeded 1000 cycles, forcing halt.", 0);
-            break;
+            pipeline1.halt();
+            pipeline2.halt();
         }
     }
     printDebug("CPU simulation complete", 0);
