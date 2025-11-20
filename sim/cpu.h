@@ -84,7 +84,8 @@ class CpuSim {
 
         uint32_t pc;
         uint32_t pc_offset;
-        uint32_t instr_fetch_pc;  // PC value when instruction was fetched
+        uint32_t instr_decode_pc;  // PC value when instruction was fetched
+        uint32_t instr_execute_pc;
         pipelineState   state;
         uint32_t        instruction;
         uint32_t        jumpval;

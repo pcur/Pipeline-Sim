@@ -58,7 +58,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         // Branch Equal to
         case BEQ:
             if(reg1_val == reg2_val){
-                 pc = instru_fetch_pc + imm - FETCH_OFFSET; // -1 Because we add it already in fetch
+                 pc = instr_execute_pc + imm + FETCH_OFFSET; // -1 Because we add it already in fetch
                  flush();
             }
             val = pc;
@@ -67,7 +67,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         // Branch Not Equal to
         case BNE:
             if(reg1_val != reg2_val){
-                pc = instr_fetch_pc + imm - FETCH_OFFSET;
+                pc = instr_execute_pc + imm + FETCH_OFFSET;
                 flush();
             }
             val = pc;
@@ -76,7 +76,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         // Branch less than
         case BLT:
             if(reg1_val < reg2_val){
-                pc = instr_fetch_pc + imm - FETCH_OFFSET;
+                pc = instr_execute_pc + imm + FETCH_OFFSET;
                 flush();
             }
             val = pc;
@@ -85,7 +85,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         // Branch greater than or equal
         case BGE:
             if(reg1_val > reg2_val){
-                pc = instr_fetch_pc + imm - FETCH_OFFSET;
+                pc = instr_execute_pc + imm + FETCH_OFFSET;
                 flush();
             }
             val = pc;
@@ -94,7 +94,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         // Branch Less than or Equal to (unsigned)
         case BLTU:
             if(reg1_val <= reg2_val){
-                pc = instr_fetch_pc + imm - FETCH_OFFSET;
+                pc = instr_execute_pc + imm + FETCH_OFFSET;
                 flush();
             }
             val = pc;
@@ -103,20 +103,20 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         // Branch Greater than or Equal to (unsigned)
         case BGEU:
             if(reg1_val >= reg2_val){
-                pc = instr_fetch_pc + imm - FETCH_OFFSET;
+                pc = instr_execute_pc + imm + FETCH_OFFSET;
                 flush();
             }
             val = pc;
             state.executeState = "BGEU";
             break;
         case JAL:
-            pc = instr_fetch_pc + imm - FETCH_OFFSET;
+            pc = instr_execute_pc + imm + FETCH_OFFSET;
             flush();
             val = pc;
             state.executeState = "JAL";
             break;
         case JALR:
-            pc = instr_fetch_pc + imm - FETCH_OFFSET;
+            pc = instr_execute_pc + imm;
             flush();
             val = pc;
             state.executeState = "JALR";
@@ -126,7 +126,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
             state.executeState = "LUI";
             break;
         default:
-            val = instr_fetch_pc;
+            val = instr_execute_pc;
             state.executeState = "????";
             break;
     }

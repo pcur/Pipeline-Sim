@@ -63,7 +63,8 @@ void CpuSim::fetch(){
         // Handle stall or retry logic as needed
         return;
     }
-    instr_fetch_pc = pc;  // Save the PC value for this instruction
+    instr_execute_pc = instr_decode_pc;
+    instr_decode_pc = pc;  // Save the PC value for this instruction
     state.fetchState = std::bitset<32>(instruction).to_string();
     std::stringstream ss;
     ss << "Fetched instruction 0b" << std::bitset<32>(instruction).to_string() << " at PC " << pc;
@@ -358,6 +359,12 @@ void CpuSim::decode(){
 }
 
 void CpuSim::execute(){
+    // Check if the instruction's fetch PC - offset == 0x094 (halt condition)
+    if((instr_execute_pc - pc_offset) >= 0x094){
+        printDebug("Halt condition reached (instruction fetch PC offset = 0x94), initiating shutdown", 0);
+        shouldHalt = true;
+    }
+
     printDebug("Executing instruction in execute stage", 2);
     state.executeState = "NO_OP";
     if(pipelineBusy) {
@@ -500,12 +507,6 @@ void CpuSim::execute(){
 
 void CpuSim::store(){
     printDebug("Entering store stage for write-back", 2);
-
-    // Check if the instruction's fetch PC - offset == 0x094 (halt condition)
-    if((instr_fetch_pc - pc_offset) >= 0x094){
-        printDebug("Halt condition reached (instruction fetch PC offset = 0x94), initiating shutdown", 0);
-        shouldHalt = true;
-    }
 
     state.storeState = state.executeState;
     printDebug("Store stage processing write-back for register " + std::to_string(exeData.wb_reg), 1);
