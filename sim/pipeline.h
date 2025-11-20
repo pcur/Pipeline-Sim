@@ -15,11 +15,10 @@ class pipelineSimulation;
 class event {
   public:
       // Construct sets time of event.
-    event (float t, std::string n, CpuSim* cI, pipelineSimulation* pS) : time (t), name(n), cpuInstance(cI), pipelineSim(pS) { }
+    event (float t, std::string n, pipelineSimulation* pS) : time (t), name(n), pipelineSim(pS) { }
 
       // Execute event by invoking this method.
     virtual void processEvent () = 0;
-    CpuSim* cpuInstance;
     pipelineSimulation* pipelineSim;
     const uint32_t time;
     std::string name;
@@ -62,30 +61,30 @@ class pipelineSimulation : public simulation {
 
 class fetchEvent : public event {
     public:
-        fetchEvent(uint32_t t, CpuSim* cpuInstance, pipelineSimulation* pipelineSim) : event(t, "fetch", cpuInstance, pipelineSim){}
+        fetchEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "fetch", pipelineSim){}
         void processEvent();
 };
 
 class decodeEvent : public event {
     public:
-        decodeEvent(uint32_t t, CpuSim* cpuInstance, pipelineSimulation* pipelineSim) : event(t, "decode", cpuInstance, pipelineSim){}
+        decodeEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "decode", pipelineSim){}
         void processEvent();
 };
 
 class executeEvent : public event {
     public:
-        executeEvent(uint32_t t, CpuSim* cpuInstance, pipelineSimulation* pipelineSim) : event(t, "execute", cpuInstance, pipelineSim){}
+        executeEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "execute", pipelineSim){}
         void processEvent();
 };
 
 class storeEvent : public event {
     public:
-        storeEvent(uint32_t t, CpuSim* cpuInstance, pipelineSimulation* pipelineSim) : event(t, "store", cpuInstance, pipelineSim){}
+        storeEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "store", pipelineSim){}
         void processEvent();
 };
 
 class hazardEvent : public event {
     public:
-        hazardEvent(uint32_t t, CpuSim* cpuInstance, pipelineSimulation* pipelineSim) : event(t, "hazard", cpuInstance, pipelineSim) {}
+        hazardEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "hazard", pipelineSim){}
         void processEvent();
 };
