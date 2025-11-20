@@ -1,58 +1,69 @@
+#include "../test/config.h"
 #include "../sim/pipeline.h"
-#include <cstring>
-
-void fill_queue(const std::string& filename, unsigned int* instructionQueue, size_t queueSize) {
-    std::ifstream infile(filename);
-    std::string line;
-    size_t index = 0;
-
-    while (std::getline(infile, line) && index < queueSize) {
-        unsigned int instruction = std::bitset<32>(line).to_ulong();
-        instructionQueue[index] = instruction;  // Store instruction in array
-        ++index;  // Move to the next index
-    }
-}
+#include "../sim/helpers.h"
 
 int debug;
-bool halted;
-unsigned int instrQ[10];
 
 int main(){
-    uint32_t tempQ[38];
-    uint32_t i;
-    uint32_t memAddr;
-
+    debug = 1;
+    unsigned int instrQ0[38];
+    unsigned int instrQ1[38];
+    printDebug("Setting up Pipeline test...", 0);
+    printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
-    pipelineSimulation cpuSim = pipelineSimulation(memBus);
+    printDebug("Creating CpuSim instances", 1);
+    CpuSim cpu1 = CpuSim(memBus,0x000);
+    CpuSim cpu2 = CpuSim(memBus,0x100);
 
-    //First we populate the cpu0 instructions
-    fill_queue("cpu0_instructions.txt", tempQ, 38);
-    for(i=0;i<38;i++){
-        memAddr = i * 4;
-        cpuSim.simMemory.storeWord(memAddr, tempQ[i]);
-    }
-    
-    //Next we populate the cpu1 instructions
-    fill_queue("cpu1_instructions.txt", tempQ, 38);
-    for(i=0;i<38;i++){
-        memAddr = 0x100 + (i * 4); //Gotta offset it to the correct memory location
-        cpuSim.simMemory.storeWord(memAddr, tempQ[i]);
-    }
+    // Load instruction queue from file and into memory
+    printDebug("Setting up instruction queue", 1);
+    fill_queue("instructions/cpu0_instructions.txt", instrQ0, 38);
+    load_mem_array(memBus, 0x0000, 0x0093, instrQ0);
+    fill_queue("instructions/cpu1_instructions.txt", instrQ1, 38);
+    load_mem_array(memBus, 0x0100, 0x0193, instrQ1);
 
-    //Populate data vectors in memory with random FP32 values
+        //Populate data vectors in memory with random FP32 values
     //0x400-0x7FF (ARRAY_A)
-    initialize_mem_array(cpuSim.simMemory, 0x400, 0x7FF, 123);
+    initialize_mem_array(memBus, 0x400, 0x7FF, 123);
     //0x800-0xBFF (ARRAY_B)
-    initialize_mem_array(cpuSim.simMemory, 0x800, 0xBFF, 456);
+    initialize_mem_array(memBus, 0x800, 0xBFF, 456);
     //0xC00-0xFFF (ARRAY_C)
-    initialize_mem_array(cpuSim.simMemory, 0xC00, 0xFFF, 789);
+    initialize_mem_array(memBus, 0xC00, 0xFFF, 789);
     //0x1000-0x13FF (ARRAY_D)
-    initialize_mem_array(cpuSim.simMemory, 0x1000, 0x13FF, 987);
+    initialize_mem_array(memBus, 0x1000, 0x13FF, 987);
     
-    //Need to tell it to run the sim
-    cpuSim.run();
+    // Initialize pipeline simulations
+    printDebug("Creating pipeline simulations", 1);
+    pipelineSimulation pipeline1 = pipelineSimulation(&cpu1, "CPU1");
+    pipelineSimulation pipeline2 = pipelineSimulation(&cpu2, "CPU2");
 
-    //Print some stuff here if necessary
-
+    //begin cpu simulation, driving clock externally
+    printDebug("Starting CPU simulation loop", 0);
+    printDebug("============================================================", 0);
+    pipeline1.start();
+    pipeline2.start();
+    unsigned int tick0 = 0;
+    unsigned int tick1 = 0;
+    while(!pipeline1.halted || !pipeline2.halted){
+        if(!pipeline1.halted) {
+            pipeline1.tick();
+            tick0++;
+        }
+        if(!pipeline2.halted) {
+            pipeline2.tick();
+            tick1++;
+        }
+        memBus.tick(); //advance memory bus arbitration
+    }
+    unsigned int cycles0 = tick0 / 10;
+    unsigned int cycles1 = tick1 / 10;
+    unsigned int instructionCt0 = sizeof(instrQ0) / sizeof(instrQ0[0]);
+    unsigned int instructionCt1 = sizeof(instrQ1) / sizeof(instrQ1[0]);
+    float calculated_cpi0 = cycles0 / instructionCt0;
+    float calculated_cpi1 = cycles1 / instructionCt1;
+    printDebug("CPU simulation complete.", 0);
+    printDebug("CPU0 CPI: " + std::to_string(calculated_cpi0), 0);
+    printDebug("CPU1 CPI: " + std::to_string(calculated_cpi1), 0);
+    
     return 0;
 }

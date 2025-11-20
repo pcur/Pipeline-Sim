@@ -36,6 +36,9 @@ void pipelineSimulation::endCyclePrintOut(){
 }
 //start new simulation with externally-driven clock
 void pipelineSimulation::start(){
+    cpuInstance->stallTime = 0;
+    halted = false;
+    pipelineBusy = false;
     printDebug("Starting pipeline simulation runtime loop", 2);
     scheduleEvent(new fetchEvent(clk + 9, this));
 }
@@ -100,15 +103,15 @@ void pipelineSimulation::run(){
 void fetchEvent::processEvent(){
     printDebug("Processing fetch event at time: " + std::to_string(pipelineSim->clk), 3);
     pipelineSim->cpuInstance->fetch();
-    printDebug("Scheduling decode event at tick " + std::to_string(pipelineSim->clk + 8), 4);
-    pipelineSim->scheduleEvent(new decodeEvent(pipelineSim->clk + 8, pipelineSim));
+    printDebug("Scheduling decode event at tick " + std::to_string(pipelineSim->clk + 8 + pipelineSim->cpuInstance->stallTime), 4);
+    pipelineSim->scheduleEvent(new decodeEvent(pipelineSim->clk + 8 + pipelineSim->cpuInstance->stallTime, pipelineSim));
 }
 
 void decodeEvent::processEvent(){
     printDebug("Processing decode event at time: " + std::to_string(pipelineSim->clk), 3);
     pipelineSim->cpuInstance->decode();
-    printDebug("Scheduling execute event at tick " + std::to_string(pipelineSim->clk + 7), 4);
-    pipelineSim->scheduleEvent(new executeEvent(pipelineSim->clk + 7, pipelineSim));
+    printDebug("Scheduling execute event at tick " + std::to_string(pipelineSim->clk + 7 + pipelineSim->cpuInstance->stallTime), 4);
+    pipelineSim->scheduleEvent(new executeEvent(pipelineSim->clk + 7 + pipelineSim->cpuInstance->stallTime, pipelineSim));
 }
 
 void executeEvent::processEvent(){

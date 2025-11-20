@@ -32,7 +32,7 @@ int main(){
         if(!pipeline1.halted) pipeline1.tick();
         memBus.tick(); //advance memory bus arbitration
         loop++;
-        if(loop > 21){ //safety break
+        if(loop > 51){ //safety break
             printDebug("ERROR: Simulation loop exceeded 1000 cycles, forcing halt.", 0);
             pipeline1.halt();
         }
