@@ -8,15 +8,22 @@ unsigned int instrQ[10];
 
 int main(){
     debug = 1;
-    halted = 0;
-    std::cout << "Pipeline Simulation, assignment 2\n";
-    fill_queue("instructions.txt", instrQ, 9);
+    printDebug("Setting up Pipeline test...", 0);
+    printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
-    for(int i = 0; i < 8; i++){
-        std::cout << instrQ[i] << std::endl;
-    }
-    pipelineSimulation cpuSim = pipelineSimulation(memBus);
-    cpuSim.run();
+    printDebug("Creating CpuSim instance", 1);
+    CpuSim cpu1 = CpuSim(memBus);
+
+    printDebug("Setting up instruction queue", 0);
+    fill_queue("instructions.txt", instrQ, 10);
+    load_mem_array(memBus, 0x0000, 0x0027, instrQ);
+
+     // Load instructions into memory
+    printDebug("Starting CPU simulation loop", 0);
+    printDebug("============================================================", 0);
+    cpu1.pc = 0;
+    halted = false;
+    cpu1.run();
 
     return 0;
 }
