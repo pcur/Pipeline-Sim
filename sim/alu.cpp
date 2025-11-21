@@ -61,7 +61,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         case BEQ:
             if(reg1_val == reg2_val){
                  pc = instr_execute_pc + imm + FETCH_OFFSET; // -1 Because we add it already in fetch
-                 flush();
+                 insert_no_op();
             }
             val = pc;
             state.executeState = "BEQ";
@@ -70,7 +70,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         case BNE:
             if(reg1_val != reg2_val){
                 pc = instr_execute_pc + imm + FETCH_OFFSET;
-                flush();
+                insert_no_op();
             }
             val = pc;
             state.executeState = "BNE";
@@ -80,7 +80,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "xs1: " + std::to_string(reg1_val) + ", xs2 " + std::to_string(reg2_val),1);
             if(reg1_val < reg2_val){
                 pc = instr_execute_pc + imm + FETCH_OFFSET;
-                flush();
+                insert_no_op();
             }
             
             val = pc;
@@ -90,7 +90,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         case BGE:
             if(reg1_val > reg2_val){
                 pc = instr_execute_pc + imm + FETCH_OFFSET;
-                flush();
+                insert_no_op();
             }
             val = pc;
             state.executeState = "BGE";
@@ -99,7 +99,7 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         case BLTU:
             if(reg1_val <= reg2_val){
                 pc = instr_execute_pc + imm + FETCH_OFFSET;
-                flush();
+                insert_no_op();
             }
             val = pc;
             state.executeState = "BLTU";
@@ -108,20 +108,20 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
         case BGEU:
             if(reg1_val >= reg2_val){
                 pc = instr_execute_pc + imm + FETCH_OFFSET;
-                flush();
+                insert_no_op();
             }
             val = pc;
             state.executeState = "BGEU";
             break;
         case JAL:
             pc = instr_execute_pc + imm + FETCH_OFFSET;
-            flush();
+            insert_no_op();
             val = pc;
             state.executeState = "JAL";
             break;
         case JALR:
             pc = instr_execute_pc + imm;
-            flush();
+            insert_no_op();
             val = pc;
             state.executeState = "JALR";
             break;

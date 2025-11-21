@@ -61,6 +61,8 @@ void CpuSim::fetch(){
     bool loadSuccess;
     std::tie(instruction, loadSuccess) = simMemory.tryLoadWord(pc);
     if (!loadSuccess) {
+        insert_no_op();
+        state.fetchState = "NO_OP";
         printDebug("Fetch failed: Memory bank is locked at PC " + std::to_string(pc), 1);
         // Handle stall or retry logic as needed
         return;
@@ -560,7 +562,7 @@ void CpuSim::decodeInit(){
     assemblyCode.bit_len       = 0;
 }
 
-void CpuSim::flush(){
-    printDebug("Flushing decode and fetch.", 3);
+void CpuSim::insert_no_op(){
+    printDebug("inserting no-op", 3);
     instruction = 0; // Clear current instruction, set it to NO_OP
 }
