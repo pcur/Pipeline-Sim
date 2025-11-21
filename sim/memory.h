@@ -42,17 +42,17 @@ public:
     ~MemoryBus();
     
     // Stores a word of data at the specified address, with arbitration
-    bool tryStoreWord(uint32_t address, uint32_t data);
+    uint32_t tryStoreWord(uint32_t address, uint32_t data);
     // Stores a half-word of data at the specified address, with arbitration
-    bool tryStoreHalfWord(uint32_t address, uint16_t data);
+    uint32_t tryStoreHalfWord(uint32_t address, uint16_t data);
     // Stores a byte of data at the specified address, with arbitration
-    bool tryStoreByte(uint32_t address, uint8_t data);
+    uint32_t tryStoreByte(uint32_t address, uint8_t data);
     // Loads a word of data from the specified address, with arbitration
-    std::tuple<uint32_t, bool> tryLoadWord(uint32_t address);
+    std::tuple<uint32_t, uint32_t> tryLoadWord(uint32_t address);
     // Loads a half-word of data from the specified address, with arbitration
-    std::tuple<uint16_t, bool> tryLoadHalfWord(uint32_t address);
+    std::tuple<uint16_t, uint32_t> tryLoadHalfWord(uint32_t address);
     // Loads a byte of data from the specified address, with arbitration
-    std::tuple<uint8_t, bool> tryLoadByte(uint32_t address);
+    std::tuple<uint8_t, uint32_t> tryLoadByte(uint32_t address);
     // Tick: Advances the state of the memory bus by one tick (for arbitration timing)
     void tick(int num_ticks = 1);
 
@@ -66,6 +66,7 @@ private:
     void lock(uint8_t bank, bool readLatency);
     void unlock(uint8_t bank);
     bool is_locked(uint8_t bank); 
+    uint32_t time_left(uint8_t bank);
     std::vector<uint8_t> ticks_until_free; // Tracks ticks until each bank is free
 };
 

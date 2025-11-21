@@ -20,7 +20,7 @@ class event {
       // Execute event by invoking this method.
     virtual void processEvent () = 0;
     pipelineSimulation* pipelineSim;
-    const uint32_t time;
+    uint32_t time;
     std::string name;
 };
 

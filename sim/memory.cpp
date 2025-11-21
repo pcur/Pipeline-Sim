@@ -186,106 +186,125 @@ uint8_t MemoryBus::bank(uint32_t address) {
 }
 
 // Wrapped methods - call parent's implementation with optional pre/post processing
+uint32_t MemoryBus::time_left(uint8_t bank){
+    uint8_t ticks_left = ticks_until_free[bank];
+    printDebug("Bank " + std::to_string(bank) + " has " + std::to_string(ticks_left) + " ticks left.", 4);
+    return ticks_left;
+}
 
-bool MemoryBus::tryStoreWord(uint32_t address, uint32_t data) {
+uint32_t MemoryBus::tryStoreWord(uint32_t address, uint32_t data) {
     uint8_t bankNum = bank(address);
-    if (is_locked(bankNum)) {
+    /*if (is_locked(bankNum)) {
         std::ostringstream oss;
         oss << "0x" << std::hex << std::uppercase << address;
         printDebug("StoreWord failed: Bank is locked at address " + oss.str(), 1);
         return false; // Bank is locked, cannot perform store
     }
-    Memory::storeWord(address, data);
     lock(bankNum, false);
+    */
+    ticks_until_free[bankNum] += STORE_LATENCY;
+    Memory::storeWord(address, data);
+
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("StoreWord succeeded at address " + oss.str(),1);
     printDebug("Stored value: " + std::to_string(data) + " to memory.",2);
-    return true;
+    return (ticks_until_free[bankNum] / 10) * 10;
 }
 
-bool MemoryBus::tryStoreHalfWord(uint32_t address, uint16_t data) {
+uint32_t MemoryBus::tryStoreHalfWord(uint32_t address, uint16_t data) {
     uint8_t bankNum = bank(address);
-    if (is_locked(bankNum)) {
+    /*if (is_locked(bankNum)) {
         std::ostringstream oss;
         oss << "0x" << std::hex << std::uppercase << address;
         printDebug("StoreHalfWord failed: Bank is locked at address " + oss.str(), 1);
         return false; // Bank is locked, cannot perform store
     }
+    lock(bankNum, false);
+    */
+    ticks_until_free[bankNum] += STORE_LATENCY;
     Memory::storeHalfWord(address, data);
 
-    lock(bankNum, false);
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("StoreHalfWord succeeded at address " + oss.str(), 1);
     printDebug("Stored value: " + std::to_string(data) + " to memory.",2);
-    return true;
+    return (ticks_until_free[bankNum] / 10) * 10;
 }
     
-bool MemoryBus::tryStoreByte(uint32_t address, uint8_t data) {
+uint32_t MemoryBus::tryStoreByte(uint32_t address, uint8_t data) {
     uint8_t bankNum = bank(address);
-    if (is_locked(bankNum)) {
+    /*if (is_locked(bankNum)) {
         std::ostringstream oss;
         oss << "0x" << std::hex << std::uppercase << address;
         printDebug("StoreByte failed: Bank is locked at address " + oss.str(), 1);
         return false; // Bank is locked, cannot perform store
     }
-    Memory::storeByte(address, data);
     lock(bankNum, false);
+    */
+    ticks_until_free[bankNum] += STORE_LATENCY;
+    Memory::storeByte(address, data);
+    
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("StoreByte succeeded at address " + oss.str(), 1);
     printDebug("Stored value: " + std::to_string(data) + " to memory.",2);
-    return true;
+    return (ticks_until_free[bankNum] / 10) * 10;
 }
 
-std::tuple<uint32_t, bool> MemoryBus::tryLoadWord(uint32_t address) {
+std::tuple<uint32_t, uint32_t> MemoryBus::tryLoadWord(uint32_t address) {
     uint8_t bankNum = bank(address);
-    if (is_locked(bankNum)) {
+    /*if (is_locked(bankNum)) {
         std::ostringstream oss;
         oss << "0x" << std::hex << std::uppercase << address;
         printDebug("LoadWord failed: Bank is locked at address " + oss.str(), 1);
         return std::make_tuple(0, false); // Bank is locked, cannot perform load
     }
     lock(bankNum, true);
+    */
+    ticks_until_free[bankNum] += STORE_LATENCY;
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadWord succeeded at address " + oss.str(), 1);
     uint32_t data = Memory::loadWord(address);
     printDebug("Loaded value: " + std::to_string(data) + " from memory.",2);    
-    return std::make_tuple(data, true);
+    return std::make_tuple(data, ticks_until_free[bankNum]);
 }
 
-std::tuple<uint16_t, bool> MemoryBus::tryLoadHalfWord(uint32_t address) {
+std::tuple<uint16_t, uint32_t> MemoryBus::tryLoadHalfWord(uint32_t address) {
     uint8_t bankNum = bank(address);
-    if (is_locked(bankNum)) {
+    /*if (is_locked(bankNum)) {
         std::ostringstream oss;
         oss << "0x" << std::hex << std::uppercase << address;
         printDebug("LoadHalfWord failed: Bank is locked at address " + oss.str(), 1);
         return std::make_tuple(0, false); // Bank is locked, cannot perform load
     }
     lock(bankNum, true);
+    */
+    ticks_until_free[bankNum] += STORE_LATENCY;
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadHalfWord succeeded at address " + oss.str(), 1);
     uint32_t data = Memory::loadWord(address);
     printDebug("Loaded value: " + std::to_string(data) + " from memory.",2); 
-    return std::make_tuple(data, true);
+    return std::make_tuple(data, ticks_until_free[bankNum]);
 }
 
-std::tuple<uint8_t, bool> MemoryBus::tryLoadByte(uint32_t address) {
+std::tuple<uint8_t, uint32_t> MemoryBus::tryLoadByte(uint32_t address) {
     uint8_t bankNum = bank(address);
-    if (is_locked(bankNum)) {
+    /*if (is_locked(bankNum)) {
         std::ostringstream oss;
         oss << "0x" << std::hex << std::uppercase << address;
         printDebug("LoadByte failed: Bank is locked at address " + oss.str(), 1);
         return std::make_tuple(0, false); // Bank is locked, cannot perform load
     }
     lock(bankNum, true);
+    */
+    ticks_until_free[bankNum] += STORE_LATENCY;
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadByte succeeded at address " + oss.str(), 1);
     uint32_t data = Memory::loadWord(address);
     printDebug("Loaded value: " + std::to_string(data) + " from memory.",2); 
-    return std::make_tuple(data, true);
+    return std::make_tuple(data, ticks_until_free[bankNum]);
 }
