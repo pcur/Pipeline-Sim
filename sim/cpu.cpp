@@ -166,6 +166,8 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 1;
+            // Size control
+            assemblyCode.bit_len = 32; // only supporting word loads for float for now
             printDebug("Decoded I-type instruction at " + temp_ss.str(), 1);
             break;
 
@@ -196,7 +198,7 @@ void CpuSim::decode(){
             state.decodeState    = "STYPE";
             // S-type instruction decoding
             assemblyCode.imm     = (((instruction & 0xFE000000) >> 25) << 5) | ((instruction & 0x00000F80) >> 7);
-            assemblyCode.rd      = (instruction & 0x01F00000) >> 20;
+            assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             // ALU control
@@ -218,7 +220,7 @@ void CpuSim::decode(){
             state.decodeState    = "STYPE-F";
             // S-type instruction decoding
             assemblyCode.imm     = (((instruction & 0xFE000000) >> 25) << 5) | ((instruction & 0x00000F80) >> 7);
-            assemblyCode.rd      = (instruction & 0x01F00000) >> 20;
+            assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             // ALU control
@@ -308,7 +310,7 @@ void CpuSim::decode(){
             assemblyCode.pc_enable = 0;
             assemblyCode.imm_sel = 1;
             // Memory mux control
-            assemblyCode.store_sel = 1;
+            assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
@@ -360,7 +362,7 @@ void CpuSim::decode(){
             break;
     }
     if((assemblyCode.opcode != UTYPE) && (assemblyCode.opcode != JTYPE)) assemblyCode.imm = signExtend(assemblyCode.imm, 12);
-    else if(assemblyCode.opcode == JTYPE) assemblyCode.imm = signExtend(assemblyCode.imm, 20);
+    else assemblyCode.imm = signExtend(assemblyCode.imm, 20);
 }
 
 void CpuSim::execute(){
