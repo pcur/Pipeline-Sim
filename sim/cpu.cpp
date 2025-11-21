@@ -360,6 +360,9 @@ void CpuSim::decode(){
 
 void CpuSim::execute(){
     // Check if the instruction's fetch PC - offset == 0x094 (halt condition)
+    std::stringstream temp_ss;
+    temp_ss << std::hex << std::showbase << instr_execute_pc;
+
     if((instr_execute_pc - pc_offset) >= 0x094){
         printDebug("Halt condition reached (instruction fetch PC offset = 0x94), initiating shutdown", 0);
         shouldHalt = true;
@@ -369,7 +372,7 @@ void CpuSim::execute(){
     state.executeState = "NO_OP";
     if(pipelineBusy) {
         state.executeState = "STALL";
-        printDebug("Pipeline is busy, stalling execute stage", 1);
+        printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
     }
     float float_alu_val;
     float float_demux_store_line;
@@ -380,24 +383,24 @@ void CpuSim::execute(){
 
     switch(assemblyCode.float_regs){
         case 0: // Case 0, entirely INT based operations
-            printDebug("Executing INT based operation", 2);
+            printDebug("EXECUTE - " + temp_ss.str() + ": " + "Executing INT based operation", 2);
             exeData.alu_val1 = int_reg_bank[assemblyCode.rs1];
             if(assemblyCode.imm_sel){
-                printDebug("Using immediate value for ALU operand 2: " + std::to_string(assemblyCode.imm), 2);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Using immediate value for ALU operand 2: " + std::to_string(assemblyCode.imm), 2);
                 // May need to sign extend here. Not sure
                 exeData.alu_val2 = assemblyCode.imm;
             }
             else {
-                printDebug("Using register value for ALU operand 2: " + std::to_string(int_reg_bank[assemblyCode.rs2]), 2);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Using register value for ALU operand 2: " + std::to_string(int_reg_bank[assemblyCode.rs2]), 2);
                 exeData.alu_val2 = int_reg_bank[assemblyCode.rs2];
             }
             int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, assemblyCode.imm);
             if(assemblyCode.store_sel){
-                printDebug("Store select is enabled", 3);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is enabled", 3);
                 // Store stuff goes here
                 int_demux_store_line = int_alu_val;
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
-                    printDebug("Store enable is high, performing store operation", 2);
+                    printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing store operation", 2);
                     //STORE FUNCTION HERE
                     switch(assemblyCode.bit_len){
                         case Byte:
@@ -415,7 +418,7 @@ void CpuSim::execute(){
                 }
                 else{
                     //LOAD FUNCTION HERE
-                    printDebug("Store enable is low, performing load operation", 2);
+                    printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing load operation", 2);
                     bool load_success;
                     unsigned int data;
                     switch(assemblyCode.bit_len){
@@ -437,31 +440,31 @@ void CpuSim::execute(){
                 }
             }
             else{
-                printDebug("Store select is disabled, writing ALU result to write-back integer value", 3);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is disabled, writing ALU result to write-back integer value", 3);
                 exeData.wb_int_val = int_alu_val;
             }
             if(assemblyCode.wb_enable){
-                printDebug("Write-back is enabled, preparing to write to register " + std::to_string(assemblyCode.rd), 3);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Write-back is enabled, preparing to write to register " + std::to_string(assemblyCode.rd), 3);
                 exeData.wb = 1;
                 exeData.wb_reg = assemblyCode.rd;
             }
             break;
         case 1: // Case 1, float value in Reg2 we need to store or load somewhere
-            printDebug("Executing FLOAT based operation", 2);
+            printDebug("EXECUTE - " + temp_ss.str() + ": " + "Executing FLOAT based operation", 2);
             exeData.alu_val1 = int_reg_bank[assemblyCode.rs1];
             exeData.alu_val2 = assemblyCode.imm;
             int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, assemblyCode.alucode, assemblyCode.imm);
             if(assemblyCode.store_sel){
-                printDebug("Store select is enabled for FLOAT operation", 3);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is enabled for FLOAT operation", 3);
                 // Store stuff goes here
                 int_demux_store_line = int_alu_val;
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
-                    printDebug("Store enable is high, performing FLOAT store operation", 2);
+                    printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing FLOAT store operation", 2);
                     //STORE FUNCTION HERE
                     simMemory.tryStoreWord(int_alu_val, float(float_reg_bank[assemblyCode.rs2]));
                 }
                 else{
-                    printDebug("Store enable is low, performing FLOAT load operation", 2);
+                    printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing FLOAT load operation", 2);
                     //LOAD FUNCTION HERE
                     unsigned int data;
                     bool load_success;
@@ -470,37 +473,37 @@ void CpuSim::execute(){
                 }
             }
             else{
-                printDebug("Store select is disabled, writing ALU result to write-back integer value for FLOAT operation", 3);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is disabled, writing ALU result to write-back integer value for FLOAT operation", 3);
                 exeData.wb_int_val = int_alu_val;
             }
             if(assemblyCode.wb_enable){
-                printDebug("Write-back is enabled, preparing to write to register " + std::to_string(assemblyCode.rd), 3);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Write-back is enabled, preparing to write to register " + std::to_string(assemblyCode.rd), 3);
                 exeData.wb = 1;
                 exeData.wb_reg = assemblyCode.rd;
             }
             break;
         case 2: // Case 2, float ALU math
-            printDebug("Executing FLOAT ALU operation", 2);
+            printDebug("EXECUTE - " + temp_ss.str() + ": " + "Executing FLOAT ALU operation", 2);
             if(assemblyCode.imm_sel){
-                printDebug("Using immediate value for ALU operand 2: " + std::to_string(assemblyCode.imm), 2);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Using immediate value for ALU operand 2: " + std::to_string(assemblyCode.imm), 2);
             // May need to sign extend here. Not sure
                 exeData.alu_float2 = static_cast<float>(assemblyCode.imm);
             }
             else{
-                printDebug("Using register value for ALU operand 2: " + std::to_string(float_reg_bank[assemblyCode.rs2]), 2);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Using register value for ALU operand 2: " + std::to_string(float_reg_bank[assemblyCode.rs2]), 2);
                 exeData.alu_float2 = float_reg_bank[assemblyCode.rs2];
             }
             float_alu_val = alu(float_reg_bank[assemblyCode.rs1], exeData.alu_float2, assemblyCode.alucode);
             // No need for STORE or LOAD, this option should only be reached for Float ALU ops
             exeData.wb_float_val = float_alu_val;
             if(assemblyCode.wb_enable){
-                printDebug("Write-back is enabled, preparing to write to register " + std::to_string(assemblyCode.rd), 3);
+                printDebug("EXECUTE - " + temp_ss.str() + ": " + "Write-back is enabled, preparing to write to register " + std::to_string(assemblyCode.rd), 3);
                 exeData.wb = 2;
                 exeData.wb_reg = assemblyCode.rd;
             }
             break;
         default:
-            printDebug("ERR: Default case reached in execute stage", 0);
+            printDebug("EXECUTE - " + temp_ss.str() + ": " + "ERR: Default case reached in execute stage", 0);
             break;
     }
 }
