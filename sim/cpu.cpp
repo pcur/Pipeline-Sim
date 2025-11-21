@@ -58,7 +58,7 @@ void CpuSim::fetch(){
         return;
     }
     
-    simMemory.loadWord(pc);
+    instruction = simMemory.loadWord(pc);;
 
     instr_execute_pc = instr_decode_pc;
     instr_decode_pc = pc;  // Save the PC value for this instruction
