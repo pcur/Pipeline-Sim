@@ -115,8 +115,8 @@ void decodeEvent::processEvent(){
 void executeEvent::processEvent(){
     printDebug("Processing execute event at time: " + std::to_string(pipelineSim->clk), 3);
     pipelineSim->cpuInstance->execute();
-    printDebug("Scheduling store event at tick " + std::to_string(pipelineSim->clk + 8), 4);
-    pipelineSim->scheduleEvent(new storeEvent(pipelineSim->clk + 8, pipelineSim));
+    printDebug("Scheduling store event at tick " + std::to_string(pipelineSim->clk + 8 + pipelineSim->cpuInstance->stallTime), 4);
+    pipelineSim->scheduleEvent(new storeEvent(pipelineSim->clk + 8 + pipelineSim->cpuInstance->stallTime, pipelineSim));
 }
 
 void storeEvent::processEvent(){

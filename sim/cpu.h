@@ -97,6 +97,7 @@ class CpuSim {
         uint32_t        stallVal = 0;
         uint32_t        stallTime = 0;
         bool            stallDone = true;
+        bool            stallActive = false;
         bool            pipelineBusy = false;
         bool            shouldHalt = false;
         float           scalar;

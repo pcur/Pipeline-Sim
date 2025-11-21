@@ -369,7 +369,7 @@ void CpuSim::execute(){
     if(stallTime > 0) {
         state.executeState = "STALL";
         stallTime--;
-        stallDone = true;
+        stallActive = false;
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
         return;
     }
