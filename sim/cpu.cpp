@@ -47,7 +47,9 @@ static inline int32_t signExtend(uint32_t value, int bits) {
 }
 
 void CpuSim::fetch(){
-    printDebug("Fetching instruction at PC: " + std::to_string(pc), 2);
+    std::stringstream hexpc;
+    hexpc << std::hex << std::showbase << pc;
+    printDebug("Fetching instruction at PC: " + hexpc.str(), 2);
     
     // Don't fetch if halt has been signaled
     if(shouldHalt) {
@@ -76,6 +78,9 @@ void CpuSim::decode(){
     printDebug("Decoding instruction: 0x" + std::to_string(instruction), 2);
     assemblyCode.opcode = instruction & 0x7F;
     
+    std::stringstream temp_ss;
+    temp_ss << std::hex << std::showbase << instr_decode_pc;
+
     switch(assemblyCode.opcode){
         case RTYPE: // register arithmetic
             state.decodeState    = "RTYPE";
@@ -95,7 +100,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 0;
-            printDebug("Decoded R-type instruction", 1);
+            printDebug("Decoded R-type instruction at " + temp_ss.str(), 1);
             break;
 
         case RTYPE2: // register arithmetic
@@ -116,7 +121,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 2;
-            printDebug("Decoded R-type floating point instruction", 1);
+            printDebug("Decoded R-type floating point instruction at " + temp_ss.str(), 1);
             break;
 
         case ITYPE: // immediate arithmetic
@@ -140,7 +145,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 0;
-            printDebug("Decoded I-type instruction", 1);
+            printDebug("Decoded I-type instruction at " + temp_ss.str(), 1);
             break;
 
         case ITYPE2: // I type, loads, float
@@ -161,7 +166,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 1;
-            printDebug("Decoded I-type floating point instruction", 1);
+            printDebug("Decoded I-type instruction at " + temp_ss.str(), 1);
             break;
 
         case ITYPE3: // I type, loads, int
@@ -184,7 +189,7 @@ void CpuSim::decode(){
             assemblyCode.float_regs = 0;
             // Size control
             assemblyCode.bit_len = 8 << assemblyCode.funct3;
-            printDebug("Decoded I-type load instruction with bit length: " + std::to_string(assemblyCode.bit_len), 1);
+            printDebug("Decoded I-type load instruction with bit length: " + std::to_string(assemblyCode.bit_len)+ " instruction at " + temp_ss.str(), 1);
             break;
 
         case STYPE: // stores
@@ -206,7 +211,7 @@ void CpuSim::decode(){
             assemblyCode.float_regs = 0;
             // Size control
             assemblyCode.bit_len = 8 << assemblyCode.funct3;
-            printDebug("Decoded S-type store instruction", 1);
+            printDebug("Decoded S-type store instruction at " + temp_ss.str(), 1);
             break;
 
         case STYPE2:
@@ -226,7 +231,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 0;
             assemblyCode.rw_enable = 1;
             assemblyCode.float_regs = 1;
-            printDebug("Decoded S-type floating point store instruction", 1);
+            printDebug("Decoded S-type floating point store instruction at " + temp_ss.str(), 1);
             break;
 
         case BTYPE: // branching
@@ -246,7 +251,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 0;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 0;
-            printDebug("Decoded B-type instruction", 1);
+            printDebug("Decoded B-type instruction at " + temp_ss.str(), 1);
             break;
 
         case JTYPE: // jal
@@ -266,7 +271,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 0;
-            printDebug("Decoded J-type instruction", 1);
+            printDebug("Decoded J-type instruction at " + temp_ss.str(), 1);
             break;
         
         case JTYPE2: // jalr
@@ -287,7 +292,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 0;
-            printDebug("Decoded J-type instruction", 1);
+            printDebug("Decoded J-type instruction at " + temp_ss.str(), 1);
             break;
             
         case UTYPE: // lui - load upper immediate
@@ -308,7 +313,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 0;
-            printDebug("Decoded U-type instruction", 1);
+            printDebug("Decoded U-type instruction at " + temp_ss.str(), 1);
             break;
 
         case UTYPE2: // auipc - add upper immediate to pc
@@ -326,7 +331,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 1;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 0;
-            printDebug("Decoded U-type instruction", 1);
+            printDebug("Decoded U-type instruction at " + temp_ss.str(), 1);
             break;
 
         case NOP: // no op
@@ -346,7 +351,7 @@ void CpuSim::decode(){
             assemblyCode.wb_enable = 0;
             assemblyCode.rw_enable = 0;
             assemblyCode.float_regs = 0;
-            printDebug("Decoded NOP instruction", 1);
+            printDebug("Decoded NOP instruction at " + temp_ss.str(), 1);
             break;
 
         default:

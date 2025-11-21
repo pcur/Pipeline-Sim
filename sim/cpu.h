@@ -2,7 +2,7 @@
 #include "../sim/memory.h"
 #include "../sim/alu.h"
 #include "../sim/helpers.h"
-
+#include <bit>
 /*
 #define FLD     0b0000111
 #define FADD    0b1010011
