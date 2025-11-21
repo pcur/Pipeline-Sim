@@ -377,7 +377,9 @@ void CpuSim::execute(){
     if(pipelineBusy) {
         state.executeState = "STALL";
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
+        return;
     }
+    instrCt++;
     float float_alu_val;
     float float_demux_store_line;
     float float_demux_wb_line;

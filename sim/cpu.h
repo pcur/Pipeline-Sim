@@ -100,4 +100,5 @@ class CpuSim {
         uint32_t int_reg_bank[32] = {0,0, };
         float   float_reg_bank[32];
         MemoryBus& simMemory;
+        uint32_t instrCt = 0;
 };

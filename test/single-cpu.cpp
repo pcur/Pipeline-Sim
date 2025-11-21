@@ -11,8 +11,8 @@ int main(){
     printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x03FF, 0x13FF);
     printDebug("Creating CpuSim instance", 1);
-    CpuSim cpu1 = CpuSim(memBus,0, 0x0300);
-    cpu1.initializeRegisters();
+    CpuSim cpu0 = CpuSim(memBus,0, 0x0300);
+    cpu0.initializeRegisters();
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
     fill_queue("instructions/cpu0_instructions.txt", instrQ0, 38);
@@ -26,7 +26,7 @@ int main(){
 
     // Initialize pipeline simulations
     printDebug("Creating pipeline simulations", 1);
-    pipelineSimulation pipeline1 = pipelineSimulation(&cpu1, "CPU1");
+    pipelineSimulation pipeline1 = pipelineSimulation(&cpu0, "CPU1");
 
     //begin cpu simulation, driving clock externally
     printDebug("Starting CPU simulation loop", 0);
@@ -41,9 +41,9 @@ int main(){
 
     unsigned int cycles0 = tick0 / 10;
     printDebug("Cycles: " + std::to_string(cycles0), 1);
-    unsigned int instructionCt0 = sizeof(instrQ0) / sizeof(instrQ0[0]);
+    unsigned int instructionCt0 = cpu0.instrCt;
     printDebug("Instructions: " + std::to_string(instructionCt0), 1);
-    float calculated_cpi0 = cycles0 / instructionCt0;
+    float calculated_cpi0 = static_cast<float>(cycles0) / static_cast<float>(instructionCt0);
     printDebug("CPU simulation complete.", 0);
     printDebug("CPU0 CPI: " + std::to_string(calculated_cpi0), 0);
     return 0;
