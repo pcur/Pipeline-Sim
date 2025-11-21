@@ -461,15 +461,15 @@ void CpuSim::execute(){
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing FLOAT store operation", 2);
                     //STORE FUNCTION HERE
-                    simMemory.tryStoreWord(int_alu_val, float(float_reg_bank[assemblyCode.rs2]));
+                    simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[assemblyCode.rs2]));
                 }
                 else{
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing FLOAT load operation", 2);
                     //LOAD FUNCTION HERE
-                    unsigned int data;
+                    float data;
                     bool load_success;
                     std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
-                    exeData.wb_int_val = data;
+                    exeData.wb_float_val = std::bit_cast<float>(data);
                 }
             }
             else{
