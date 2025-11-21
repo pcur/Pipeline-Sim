@@ -31,7 +31,7 @@
 #define Word        32
 
 #define FLOAT_STALL_VALUE 50
-#define MEMORY_STALL_VALUE 20
+#define INT_STALL_VALUE 10
 
 struct riscvInstr{
     // RISC-V instruction fields
@@ -75,7 +75,7 @@ struct pipelineState{
 
 class CpuSim {
     public:
-        CpuSim(MemoryBus& memBus, uint32_t offset, uint32_t sp) : pipelineBusy(0), scalar(0), simMemory(memBus), pc(offset), pc_offset(offset) {int_reg_bank[2] = sp;}
+        CpuSim(MemoryBus& memBus, uint32_t offset, uint32_t sp) : pipelineBusy(0), simMemory(memBus), pc(offset), pc_offset(offset) {int_reg_bank[2] = sp;}
         bool notStalled();
         void fetch();
         void decode();
@@ -97,11 +97,8 @@ class CpuSim {
         uint32_t        stallVal = 0;
         uint32_t        stallTime = 0;
         bool            stallDone = true;
-        bool            stallActive = false;
         bool            pipelineBusy = false;
         bool            shouldHalt = false;
-        float           scalar;
-        unsigned int    array[160];
         riscvInstr      assemblyCode;
         executeData     exeData;
         uint32_t int_reg_bank[32] = {0,0, };

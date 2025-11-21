@@ -58,15 +58,8 @@ void CpuSim::fetch(){
         return;
     }
     
-    bool loadSuccess;
-    std::tie(instruction, loadSuccess) = simMemory.tryLoadWord(pc);
-    if (!loadSuccess) {
-        insert_no_op();
-        state.fetchState = "NO_OP";
-        printDebug("Fetch failed: Memory bank is locked at PC " + std::to_string(pc), 1);
-        // Handle stall or retry logic as needed
-        return;
-    }
+    simMemory.loadWord(pc);
+
     instr_execute_pc = instr_decode_pc;
     instr_decode_pc = pc;  // Save the PC value for this instruction
     state.fetchState = std::bitset<32>(instruction).to_string();
@@ -374,7 +367,6 @@ void CpuSim::execute(){
         return;
     }*/
     stallVal = 0;
-    stallActive = false;
     if(state.decodeState == "NO_OP"){return;}
     instrCt++;
     
@@ -382,6 +374,7 @@ void CpuSim::execute(){
     int int_alu_val;  
     switch(assemblyCode.float_regs){
         case 0: // Case 0, entirely INT based operations
+            stallVal = INT_STALL_VALUE;
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "Executing INT based operation", 2);
             exeData.alu_val1 = int_reg_bank[assemblyCode.rs1];
             if(assemblyCode.imm_sel){
@@ -400,21 +393,24 @@ void CpuSim::execute(){
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing store operation", 2);
                     //STORE FUNCTION HERE
+                    bool store_success;
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            store_success = simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case HalfWord:
-                            simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            store_success = simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case Word:
-                            simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            store_success = simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         default:
                             break;
                     }
+                    if(!store_success){
+                        stallVal += STORE_LATENCY;
+                    }
                     state.executeState = "STORE";
-                    stallVal = MEMORY_STALL_VALUE;
                 }
                 else{
                     //LOAD FUNCTION HERE
@@ -438,8 +434,10 @@ void CpuSim::execute(){
                             break;
                     }
                     printDebug("exeData.wb_int_val = " + std::to_string(exeData.wb_int_val),3);
+                    if (!load_success){
+                        stallVal += LOAD_LATENCY;
+                    }
                     state.executeState = "LOAD";
-                    stallVal = MEMORY_STALL_VALUE;
                 }
             }
             else{
@@ -453,6 +451,7 @@ void CpuSim::execute(){
             }
             break;
         case 1: // Case 1, float value in Reg2 we need to store or load somewhere
+            stallVal = FLOAT_STALL_VALUE;
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "Executing FLOAT based operation", 2);
             exeData.alu_val1 = int_reg_bank[assemblyCode.rs1];
             exeData.alu_val2 = assemblyCode.imm;
@@ -463,8 +462,11 @@ void CpuSim::execute(){
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing FLOAT store operation", 2);
                     //STORE FUNCTION HERE
-                    simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[assemblyCode.rs2]));
+                    bool store_success = simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[assemblyCode.rs2]));
                     state.executeState = "STORE";
+                    if (!store_success){
+                        stallVal += STORE_LATENCY;
+                    }
                 }
                 else{
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing FLOAT load operation", 2);
@@ -474,8 +476,10 @@ void CpuSim::execute(){
                     std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
                     exeData.wb_float_val = std::bit_cast<float>(data);
                     state.executeState = "LOAD";
+                    if(!load_success){
+                        stallVal += LOAD_LATENCY;
+                    }
                 }
-                stallVal = MEMORY_STALL_VALUE;
             }
             else{
                 printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is disabled, writing ALU result to write-back integer value for FLOAT operation", 3);
@@ -488,6 +492,7 @@ void CpuSim::execute(){
             }
             break;
         case 2: // Case 2, float ALU math
+            stallVal = FLOAT_STALL_VALUE;
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "Executing FLOAT ALU operation", 2);
             if(assemblyCode.imm_sel){
                 printDebug("EXECUTE - " + temp_ss.str() + ": " + "Using immediate value for ALU operand 2: " + std::to_string(assemblyCode.imm), 2);
@@ -499,7 +504,6 @@ void CpuSim::execute(){
                 exeData.alu_float2 = float_reg_bank[assemblyCode.rs2];
             }
             float_alu_val = alu(float_reg_bank[assemblyCode.rs1], exeData.alu_float2, assemblyCode.alucode);
-            stallVal = FLOAT_STALL_VALUE;
             // No need for STORE or LOAD, this option should only be reached for Float ALU ops
             exeData.wb_float_val = float_alu_val;
             if(assemblyCode.wb_enable){
@@ -512,7 +516,7 @@ void CpuSim::execute(){
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "ERR: Default case reached in execute stage", 0);
             break;
     }
-    stallTime = stallVal;
+    stallTime = (stallVal > 10) ? stallVal - 10 : 0;
     /*if(!stallDone){
         stallTime = stallVal;
         stallActive = true;
