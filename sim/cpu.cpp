@@ -242,8 +242,8 @@ void CpuSim::decode(){
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             // ALU control
             assemblyCode.alucode = (assemblyCode.opcode << 3) + assemblyCode.funct3;             
-            assemblyCode.pc_enable = 0;
-            assemblyCode.imm_sel = 0;
+            assemblyCode.pc_enable = 1;
+            assemblyCode.imm_sel = 1;
             // Memory mux control
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
@@ -263,7 +263,7 @@ void CpuSim::decode(){
             // ALU control
             assemblyCode.alucode = (assemblyCode.opcode << 3) + assemblyCode.funct3;
             assemblyCode.pc_enable = 1;
-            assemblyCode.imm_sel = 0;
+            assemblyCode.imm_sel = 1;
             // Memory mux control
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;
@@ -284,7 +284,7 @@ void CpuSim::decode(){
             // ALU control
             assemblyCode.alucode = (assemblyCode.opcode << 3) + assemblyCode.funct3;
             assemblyCode.pc_enable = 1;
-            assemblyCode.imm_sel = 0;
+            assemblyCode.imm_sel = 1;
             // Memory mux control
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;

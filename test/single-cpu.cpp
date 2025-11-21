@@ -12,7 +12,7 @@ int main(){
     MemoryBus memBus = MemoryBus(0x00FF, 0x03FF, 0x13FF);
     printDebug("Creating CpuSim instance", 1);
     CpuSim cpu1 = CpuSim(memBus,0, 0x0300);
-
+    cpu1.initializeRegisters();
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
     fill_queue("instructions/cpu0_instructions.txt", instrQ0, 38);
