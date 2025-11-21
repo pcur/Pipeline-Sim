@@ -212,8 +212,7 @@ void CpuSim::decode(){
         case STYPE2:
             state.decodeState    = "STYPE-F";
             // S-type instruction decoding
-            assemblyCode.imm     = ((instruction & 0xFE000000) >> 25) + ((instruction & 0x00000F80) >> 7);
-            assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
+            assemblyCode.imm     = (((instruction & 0xFE000000) >> 25) << 5) | ((instruction & 0x00000F80) >> 7);
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             // ALU control
