@@ -79,6 +79,7 @@ class CpuSim {
         void execute();
         void store();
         void initializeRegisters();
+        void decodeInit();
         void flush();
         int alu(int reg1_val, int reg2_val, int function_code, int imm);
         float alu(float reg1_val, float reg2_val, int function_code);

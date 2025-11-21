@@ -76,8 +76,8 @@ void CpuSim::fetch(){
 
 void CpuSim::decode(){
     printDebug("Decoding instruction: 0x" + std::to_string(instruction), 2);
+    decodeInit();
     assemblyCode.opcode = instruction & 0x7F;
-    
     std::stringstream temp_ss;
     temp_ss << std::hex << std::showbase << instr_decode_pc;
 
@@ -548,6 +548,25 @@ void CpuSim::initializeRegisters(){
     for(int i = 0; i < 32; i++){
         float_reg_bank[i] = 0.0f;
     }
+}
+
+void CpuSim::decodeInit(){
+    assemblyCode.opcode        = 0;
+    assemblyCode.funct7        = 0;
+    assemblyCode.rs2           = 0;
+    assemblyCode.rs1           = 0;
+    assemblyCode.funct3        = 0;
+    assemblyCode.rd            = 0;
+    assemblyCode.imm           = 0;
+    assemblyCode.alucode       = 0;
+    assemblyCode.pc_enable     = 0;
+    assemblyCode.imm_sel       = 0;
+    assemblyCode.store_sel     = 0;
+    assemblyCode.mem_load_sel  = 0;
+    assemblyCode.wb_enable     = 0;
+    assemblyCode.rw_enable     = 0;
+    assemblyCode.float_regs    = 0;
+    assemblyCode.bit_len       = 0;
 }
 
 void CpuSim::flush(){
