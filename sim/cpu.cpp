@@ -190,7 +190,7 @@ void CpuSim::decode(){
         case STYPE: // stores
             state.decodeState    = "STYPE";
             // S-type instruction decoding
-            assemblyCode.imm     = ((instruction & 0xFE000000) >> 25) + ((instruction & 0x00000F80) >> 7);
+            assemblyCode.imm     = (((instruction & 0xFE000000) >> 25) << 5) | ((instruction & 0x00000F80) >> 7);
             assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
@@ -532,6 +532,15 @@ void CpuSim::store(){
         default:
             printDebug("Default case used for store write-back switch", 0);
             break;
+    }
+}
+
+void CpuSim::initializeRegisters(){
+    for(int i = 6; i < 32; i++){
+        int_reg_bank[i] = 0;
+    }
+    for(int i = 0; i < 32; i++){
+        float_reg_bank[i] = 0.0f;
     }
 }
 
