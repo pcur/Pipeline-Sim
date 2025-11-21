@@ -57,20 +57,29 @@ void CpuSim::fetch(){
         state.fetchState = "HALTED";
         return;
     }
-    
-    instruction = simMemory.loadWord(pc);;
-
-    instr_execute_pc = instr_decode_pc;
-    instr_decode_pc = pc;  // Save the PC value for this instruction
-    state.fetchState = std::bitset<32>(instruction).to_string();
-    std::stringstream ss;
-    ss << "Fetched instruction 0b" << std::bitset<32>(instruction).to_string() << " at PC " << pc;
-    printDebug(ss.str(), 1);
-    pc+=4;
+    if(stallTime > 0 && fetchStallONS){
+        printDebug("Stall active, skipping fetch", 1);
+    }
+    else{
+        fetchStallONS = true;
+        instruction = simMemory.loadWord(pc);
+        instr_execute_pc = instr_decode_pc;
+        instr_decode_pc = pc;  // Save the PC value for this instruction
+        state.fetchState = std::bitset<32>(instruction).to_string();
+        std::stringstream ss;
+        ss << "Fetched instruction 0b" << std::bitset<32>(instruction).to_string() << " at PC " << pc;
+        printDebug(ss.str(), 1);
+        pc+=4;
+    }
 }
 
 void CpuSim::decode(){
     printDebug("Decoding instruction: 0x" + std::to_string(instruction), 2);
+    if(stallTime > 0 && decodeStallONS){
+        printDebug("Stall active, skipping decode", 1);
+        return;
+    }
+    decodeStallONS = true;
     decodeInit();
     assemblyCode.opcode = instruction & 0x7F;
     std::stringstream temp_ss;
@@ -366,6 +375,8 @@ void CpuSim::execute(){
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
         return;
     }*/
+    decodeStallONS = false;
+    fetchStallONS = false;
     stallVal = 0;
     if(state.decodeState == "NO_OP"){return;}
     instrCt++;
@@ -393,50 +404,46 @@ void CpuSim::execute(){
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing store operation", 2);
                     //STORE FUNCTION HERE
-                    bool store_success;
+                    uint32_t memoryStallCycles;
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            store_success = simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            memoryStallCycles = simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case HalfWord:
-                            store_success = simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            memoryStallCycles = simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case Word:
-                            store_success = simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            memoryStallCycles = simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         default:
                             break;
                     }
-                    if(!store_success){
-                        stallVal += STORE_LATENCY;
-                    }
+                    stallVal = memoryStallCycles;
                     state.executeState = "STORE";
                 }
                 else{
                     //LOAD FUNCTION HERE
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing load operation", 2);
-                    bool load_success;
                     unsigned int data;
+                    uint32_t memoryStallCycles;
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            std::tie(data, load_success) = simMemory.tryLoadByte(int_alu_val);
+                            std::tie(data, memoryStallCycles) = simMemory.tryLoadByte(int_alu_val);
                             exeData.wb_int_val = data;
                             break;
                         case HalfWord:
-                            std::tie(data, load_success) = simMemory.tryLoadHalfWord(int_alu_val);
+                            std::tie(data, memoryStallCycles) = simMemory.tryLoadHalfWord(int_alu_val);
                             exeData.wb_int_val = data;
                             break;
                         case Word:
-                            std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
+                            std::tie(data, memoryStallCycles) = simMemory.tryLoadWord(int_alu_val);
                             exeData.wb_int_val = data;
                             break;
                         default:
                             break;
                     }
                     printDebug("exeData.wb_int_val = " + std::to_string(exeData.wb_int_val),3);
-                    if (!load_success){
-                        stallVal += LOAD_LATENCY;
-                    }
+                    stallVal = memoryStallCycles;
                     state.executeState = "LOAD";
                 }
             }
@@ -462,23 +469,19 @@ void CpuSim::execute(){
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing FLOAT store operation", 2);
                     //STORE FUNCTION HERE
-                    bool store_success = simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[assemblyCode.rs2]));
+                    uint32_t memoryStallCycles = simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[assemblyCode.rs2]));
                     state.executeState = "STORE";
-                    if (!store_success){
-                        stallVal += STORE_LATENCY;
-                    }
+                    stallVal = memoryStallCycles;
                 }
                 else{
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing FLOAT load operation", 2);
                     //LOAD FUNCTION HERE
                     float data;
-                    bool load_success;
-                    std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
+                    uint32_t memoryStallCycles;
+                    std::tie(data, memoryStallCycles) = simMemory.tryLoadWord(int_alu_val);
                     exeData.wb_float_val = std::bit_cast<float>(data);
                     state.executeState = "LOAD";
-                    if(!load_success){
-                        stallVal += LOAD_LATENCY;
-                    }
+                    stallVal = memoryStallCycles;   
                 }
             }
             else{
@@ -516,7 +519,9 @@ void CpuSim::execute(){
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "ERR: Default case reached in execute stage", 0);
             break;
     }
-    stallTime = (stallVal > 10) ? stallVal - 10 : 0;
+    stallVal = (stallVal > 10) ? stallVal - 10 : 0;
+    stallTime = stallVal;
+    //stallTime = stallVal;
     /*if(!stallDone){
         stallTime = stallVal;
         stallActive = true;

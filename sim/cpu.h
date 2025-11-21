@@ -96,7 +96,8 @@ class CpuSim {
         uint32_t        jumpval;
         uint32_t        stallVal = 0;
         uint32_t        stallTime = 0;
-        bool            stallDone = true;
+        bool            decodeStallONS = false;
+        bool            fetchStallONS = false;
         bool            pipelineBusy = false;
         bool            shouldHalt = false;
         riscvInstr      assemblyCode;
