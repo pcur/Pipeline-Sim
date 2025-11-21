@@ -58,15 +58,8 @@ void CpuSim::fetch(){
         return;
     }
     
-    bool loadSuccess;
-    std::tie(instruction, loadSuccess) = simMemory.tryLoadWord(pc);
-    if (!loadSuccess) {
-        insert_no_op();
-        state.fetchState = "NO_OP";
-        printDebug("Fetch failed: Memory bank is locked at PC " + std::to_string(pc), 1);
-        // Handle stall or retry logic as needed
-        return;
-    }
+    simMemory.loadWord(pc);
+
     instr_execute_pc = instr_decode_pc;
     instr_decode_pc = pc;  // Save the PC value for this instruction
     state.fetchState = std::bitset<32>(instruction).to_string();
@@ -397,18 +390,22 @@ void CpuSim::execute(){
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing store operation", 2);
                     //STORE FUNCTION HERE
+                    bool store_success;
                     switch(assemblyCode.bit_len){
                         case Byte:
-                            simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            store_success = simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case HalfWord:
-                            simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            store_success = simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         case Word:
-                            simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
+                            store_success = simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[assemblyCode.rs2] << (32 - assemblyCode.bit_len)) >> (32 - assemblyCode.bit_len));
                             break;
                         default:
                             break;
+                    }
+                    if(!store_success){
+                        stallTime = 10;
                     }
                 }
                 else{
@@ -433,6 +430,9 @@ void CpuSim::execute(){
                             break;
                     }
                     printDebug("exeData.wb_int_val = " + std::to_string(exeData.wb_int_val),3);
+                    if (!load_success){
+                        stallTime = 10;
+                    }
                 }
             }
             else{
@@ -446,6 +446,7 @@ void CpuSim::execute(){
             }
             break;
         case 1: // Case 1, float value in Reg2 we need to store or load somewhere
+    
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "Executing FLOAT based operation", 2);
             exeData.alu_val1 = int_reg_bank[assemblyCode.rs1];
             exeData.alu_val2 = assemblyCode.imm;
@@ -456,7 +457,10 @@ void CpuSim::execute(){
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing FLOAT store operation", 2);
                     //STORE FUNCTION HERE
-                    simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[assemblyCode.rs2]));
+                    bool store_success = simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[assemblyCode.rs2]));
+                    if (!store_success){
+                        stallTime = 10;
+                    }
                 }
                 else{
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing FLOAT load operation", 2);
@@ -465,6 +469,9 @@ void CpuSim::execute(){
                     bool load_success;
                     std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
                     exeData.wb_float_val = std::bit_cast<float>(data);
+                    if(!load_success){
+                        stallTime = 10;
+                    }
                 }
             }
             else{
