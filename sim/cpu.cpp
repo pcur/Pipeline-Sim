@@ -339,20 +339,7 @@ void CpuSim::decode(){
         case NOP: // no op
             state.decodeState    = "NO_OP";
             // Gotta make everything 0
-            assemblyCode.funct7  = 0;
-            assemblyCode.rs2     = 0;
-            assemblyCode.rs1     = 0;
-            assemblyCode.funct3  = 0;
-            assemblyCode.rd      = 0;
-            assemblyCode.imm     = 0;
-            assemblyCode.alucode = 0;
-            assemblyCode.pc_enable = 0;
-            assemblyCode.imm_sel = 0;
-            assemblyCode.store_sel = 0;
-            assemblyCode.mem_load_sel = 0;
-            assemblyCode.wb_enable = 0;
-            assemblyCode.rw_enable = 0;
-            assemblyCode.float_regs = 0;
+            decodeInit();
             printDebug("Decoded NOP instruction at " + temp_ss.str(), 1);
             break;
 
@@ -382,13 +369,11 @@ void CpuSim::execute(){
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
         return;
     }
+    if(state.decodeState == "NO_OP"){return;}
     instrCt++;
+    
     float float_alu_val;
-    float float_demux_store_line;
-    float float_demux_wb_line;
     int int_alu_val;  
-    int int_demux_store_line;
-    int int_demux_wb_line;
 
     switch(assemblyCode.float_regs){
         case 0: // Case 0, entirely INT based operations
@@ -407,7 +392,6 @@ void CpuSim::execute(){
             if(assemblyCode.store_sel){
                 printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is enabled", 3);
                 // Store stuff goes here
-                int_demux_store_line = int_alu_val;
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing store operation", 2);
                     //STORE FUNCTION HERE
@@ -446,6 +430,7 @@ void CpuSim::execute(){
                         default:
                             break;
                     }
+                    printDebug("exeData.wb_int_val = " + std::to_string(exeData.wb_int_val),3);
                 }
             }
             else{
@@ -466,7 +451,6 @@ void CpuSim::execute(){
             if(assemblyCode.store_sel){
                 printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is enabled for FLOAT operation", 3);
                 // Store stuff goes here
-                int_demux_store_line = int_alu_val;
                 if(assemblyCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing FLOAT store operation", 2);
                     //STORE FUNCTION HERE
@@ -515,6 +499,7 @@ void CpuSim::execute(){
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "ERR: Default case reached in execute stage", 0);
             break;
     }
+
 }
 
 void CpuSim::store(){
@@ -523,6 +508,9 @@ void CpuSim::store(){
     state.storeState = state.executeState;
     printDebug("Store stage processing write-back for register " + std::to_string(exeData.wb_reg), 1);
     switch(exeData.wb){
+        case 0:
+            printDebug("No Writeback needed, case 0 in store switch",2);
+            break;
         case 1:
             if(exeData.wb_reg == 0){ // not allowed to write things to register 0, its forever 0
                 printDebug("Attempted to write to register 0, operation ignored", 1);
@@ -539,7 +527,7 @@ void CpuSim::store(){
             exeData.wb = 0;
             break;
         default:
-            printDebug("Default case used for store write-back switch", 0);
+            printDebug("Default case used for store write-back switch with value " + std::to_string(exeData.wb), 0);
             break;
     }
 }
@@ -573,5 +561,6 @@ void CpuSim::decodeInit(){
 }
 
 void CpuSim::flush(){
+    printDebug("Flushing decode and fetch.", 3);
     instruction = 0; // Clear current instruction, set it to NO_OP
 }
