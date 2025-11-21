@@ -26,18 +26,20 @@ int main(){
 
     // Initialize pipeline simulations
     printDebug("Creating pipeline simulations", 1);
-    pipelineSimulation pipeline1 = pipelineSimulation(&cpu0, "CPU1");
+    pipelineSimulation pipeline0 = pipelineSimulation(&cpu0, "CPU1");
 
     //begin cpu simulation, driving clock externally
     printDebug("Starting CPU simulation loop", 0);
     printDebug("============================================================", 0);
-    pipeline1.start();
+    pipeline0.start();
     int tick0 = 0;
-    while(!pipeline1.halted){
-        if(!pipeline1.halted) pipeline1.tick();
-        memBus.tick(); //advance memory bus arbitration
-        tick0++;
+    while(!pipeline0.halted){
+        if(!pipeline0.halted) {
+            pipeline0.tick();
+            tick0++;
         }
+        memBus.tick(); //advance memory bus arbitration
+    }
 
     unsigned int cycles0 = tick0 / 10;
     printDebug("Cycles: " + std::to_string(cycles0), 1);

@@ -12,9 +12,10 @@ int main(){
     printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
     printDebug("Creating CpuSim instances", 1);
-    CpuSim cpu0 = CpuSim(memBus,0x000,0x2FF);
-    CpuSim cpu1 = CpuSim(memBus,0x100,0x3FF);
-
+    CpuSim cpu0 = CpuSim(memBus,0x0000,0x2FC);
+    CpuSim cpu1 = CpuSim(memBus,0x0100,0x3FC);
+    cpu0.initializeRegisters();
+    cpu1.initializeRegisters();
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
     fill_queue("instructions/cpu0_instructions.txt", instrQ0, 38);
@@ -30,23 +31,23 @@ int main(){
 
     // Initialize pipeline simulations
     printDebug("Creating pipeline simulations", 1);
-    pipelineSimulation pipeline1 = pipelineSimulation(&cpu0, "CPU1");
-    pipelineSimulation pipeline2 = pipelineSimulation(&cpu1, "CPU2");
+    pipelineSimulation pipeline0 = pipelineSimulation(&cpu0, "CPU1");
+    pipelineSimulation pipeline1 = pipelineSimulation(&cpu1, "CPU2");
 
     //begin cpu simulation, driving clock externally
     printDebug("Starting CPU simulation loop", 0);
     printDebug("============================================================", 0);
+    pipeline0.start();
     pipeline1.start();
-    pipeline2.start();
     unsigned int tick0 = 0;
     unsigned int tick1 = 0;
-    while(!pipeline1.halted || !pipeline2.halted){
-        if(!pipeline1.halted) {
-            pipeline1.tick();
+    while(!pipeline0.halted || !pipeline1.halted){
+        if(!pipeline0.halted) {
+            pipeline0.tick();
             tick0++;
         }
-        if(!pipeline2.halted) {
-            pipeline2.tick();
+        if(!pipeline1.halted) {
+            pipeline1.tick();
             tick1++;
         }
         memBus.tick(); //advance memory bus arbitration
