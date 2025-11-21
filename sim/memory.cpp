@@ -200,6 +200,7 @@ bool MemoryBus::tryStoreWord(uint32_t address, uint32_t data) {
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("StoreWord succeeded at address " + oss.str(),1);
+    printDebug("Stored value: " + std::to_string(data) + " to memory.",2);
     return true;
 }
 
@@ -217,6 +218,7 @@ bool MemoryBus::tryStoreHalfWord(uint32_t address, uint16_t data) {
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("StoreHalfWord succeeded at address " + oss.str(), 1);
+    printDebug("Stored value: " + std::to_string(data) + " to memory.",2);
     return true;
 }
     
@@ -233,6 +235,7 @@ bool MemoryBus::tryStoreByte(uint32_t address, uint8_t data) {
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("StoreByte succeeded at address " + oss.str(), 1);
+    printDebug("Stored value: " + std::to_string(data) + " to memory.",2);
     return true;
 }
 
@@ -248,7 +251,9 @@ std::tuple<uint32_t, bool> MemoryBus::tryLoadWord(uint32_t address) {
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadWord succeeded at address " + oss.str(), 1);
-    return std::make_tuple(Memory::loadWord(address), true);
+    uint32_t data = Memory::loadWord(address);
+    printDebug("Loaded value: " + std::to_string(data) + " from memory.",2);    
+    return std::make_tuple(data, true);
 }
 
 std::tuple<uint16_t, bool> MemoryBus::tryLoadHalfWord(uint32_t address) {
@@ -263,7 +268,9 @@ std::tuple<uint16_t, bool> MemoryBus::tryLoadHalfWord(uint32_t address) {
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadHalfWord succeeded at address " + oss.str(), 1);
-    return std::make_tuple(Memory::loadHalfWord(address), true);
+    uint32_t data = Memory::loadWord(address);
+    printDebug("Loaded value: " + std::to_string(data) + " from memory.",2); 
+    return std::make_tuple(data, true);
 }
 
 std::tuple<uint8_t, bool> MemoryBus::tryLoadByte(uint32_t address) {
@@ -278,5 +285,7 @@ std::tuple<uint8_t, bool> MemoryBus::tryLoadByte(uint32_t address) {
     std::ostringstream oss;
     oss << "0x" << std::hex << std::uppercase << address;
     printDebug("LoadByte succeeded at address " + oss.str(), 1);
-    return std::make_tuple(Memory::loadByte(address), true);
+    uint32_t data = Memory::loadWord(address);
+    printDebug("Loaded value: " + std::to_string(data) + " from memory.",2); 
+    return std::make_tuple(data, true);
 }
