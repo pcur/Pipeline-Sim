@@ -6,19 +6,24 @@ int debug;
 
 int main(){
     debug = 1;
-    unsigned int instrQ[10];
+    unsigned int instrQ[38];
     printDebug("Setting up Pipeline test...", 0);
     printDebug("Initializing MemoryBus", 1);
     MemoryBus memBus = MemoryBus(0x00FF, 0x01FF, 0x13FF);
     printDebug("Creating CpuSim instances", 1);
-    CpuSim cpu1 = CpuSim(memBus,0x000,0x2FF);
-    CpuSim cpu2 = CpuSim(memBus,0x100,0x3FF);
+    CpuSim cpu1 = CpuSim(memBus,0x000,0x2FC);
+    CpuSim cpu2 = CpuSim(memBus,0x100,0x3FC);
 
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
-    fill_queue("instructions/instructions.txt", instrQ, 10);
-    load_mem_array(memBus, 0x0000, 0x0027, instrQ);
-    load_mem_array(memBus, 0x0100, 0x0127, instrQ);
+    fill_queue("instructions/cpu0_instructions.txt", instrQ, 38);
+    load_mem_array(memBus, 0x0000, 0x0093, instrQ);
+
+    fill_queue("instructions/cpu1_instructions.txt", instrQ, 38);
+    load_mem_array(memBus, 0x0100, 0x0193, instrQ);
+
+    initialize_mem_array(memBus, 0x400, 0x7FF, 123);
+    initialize_mem_array(memBus, 0x800, 0xBFF, 456);
 
     // Initialize pipeline simulations
     printDebug("Creating pipeline simulations", 1);
@@ -36,7 +41,7 @@ int main(){
         if(!pipeline2.halted) pipeline2.tick();
         memBus.tick(); //advance memory bus arbitration
         loop++;
-        if(loop > 21){ //safety break
+        if(loop > 3000000){ //safety break
             printDebug("ERROR: Simulation loop exceeded 1000 cycles, forcing halt.", 0);
             pipeline1.halt();
             pipeline2.halt();

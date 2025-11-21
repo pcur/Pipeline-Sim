@@ -366,8 +366,10 @@ void CpuSim::execute(){
 
     printDebug("Executing instruction in execute stage", 2);
     state.executeState = "NO_OP";
-    if(pipelineBusy) {
+    if(stallTime > 0) {
         state.executeState = "STALL";
+        stallTime--;
+        stallDone = true;
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
         return;
     }
@@ -376,7 +378,6 @@ void CpuSim::execute(){
     
     float float_alu_val;
     int int_alu_val;  
-
     switch(assemblyCode.float_regs){
         case 0: // Case 0, entirely INT based operations
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "Executing INT based operation", 2);
@@ -410,6 +411,7 @@ void CpuSim::execute(){
                         default:
                             break;
                     }
+                    stallVal = MEMORY_STALL_VALUE;
                 }
                 else{
                     //LOAD FUNCTION HERE
@@ -433,6 +435,7 @@ void CpuSim::execute(){
                             break;
                     }
                     printDebug("exeData.wb_int_val = " + std::to_string(exeData.wb_int_val),3);
+                    stallVal = MEMORY_STALL_VALUE;
                 }
             }
             else{
@@ -466,6 +469,7 @@ void CpuSim::execute(){
                     std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
                     exeData.wb_float_val = std::bit_cast<float>(data);
                 }
+                stallVal = MEMORY_STALL_VALUE;
             }
             else{
                 printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is disabled, writing ALU result to write-back integer value for FLOAT operation", 3);
@@ -489,6 +493,7 @@ void CpuSim::execute(){
                 exeData.alu_float2 = float_reg_bank[assemblyCode.rs2];
             }
             float_alu_val = alu(float_reg_bank[assemblyCode.rs1], exeData.alu_float2, assemblyCode.alucode);
+            stallVal = FLOAT_STALL_VALUE;
             // No need for STORE or LOAD, this option should only be reached for Float ALU ops
             exeData.wb_float_val = float_alu_val;
             if(assemblyCode.wb_enable){
@@ -502,6 +507,18 @@ void CpuSim::execute(){
             break;
     }
 
+    if(!stallDone){
+        stallTime = stallVal;;
+    }
+    else{
+        stallVal = 0;
+        stallDone = false;
+    }
+    if(stallVal > 0){
+        pipelineBusy = true;
+        printDebug("EXECUTE - " + temp_ss.str() + ": " + "Stalling pipeline for " + std::to_string(stallVal) + " cycles", 1);
+    }
+    stallDone = false;
 }
 
 void CpuSim::store(){

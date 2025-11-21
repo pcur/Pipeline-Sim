@@ -30,6 +30,9 @@
 #define HalfWord    16
 #define Word        32
 
+#define FLOAT_STALL_VALUE 50
+#define MEMORY_STALL_VALUE 20
+
 struct riscvInstr{
     // RISC-V instruction fields
     uint32_t opcode;
@@ -91,8 +94,10 @@ class CpuSim {
         pipelineState   state;
         uint32_t        instruction;
         uint32_t        jumpval;
-        uint32_t        stallTime;
-        bool            pipelineBusy;
+        uint32_t        stallVal = 0;
+        uint32_t        stallTime = 0;
+        bool            stallDone = true;
+        bool            pipelineBusy = false;
         bool            shouldHalt = false;
         float           scalar;
         unsigned int    array[160];

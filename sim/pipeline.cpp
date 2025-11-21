@@ -56,6 +56,7 @@ void pipelineSimulation::tick(){
             event * nextEvent = eventQueue.top();
             nextEvent->processEvent();
             if(halted) break;
+            if(cpuInstance->pipelineBusy) break;
             //may need stall logic here
             eventQueue.pop();
             delete nextEvent;
@@ -72,9 +73,8 @@ void pipelineSimulation::tick(){
         halt();
     }
     else{
-        if(stallTime > 0) {
-            pipelineBusy = 1;
-            printDebug("Pipeline is stalled for " + std::to_string(stallTime) + " more cycles", 1);
+        if(cpuInstance->stallTime > 0) {
+            printDebug("Pipeline is stalled for " + std::to_string(cpuInstance->stallTime) + " more cycles", 1);
         }
         if(notStalled()){
             if (clk % 10 == 9){ // only schedule fence once per cpu cycle{}
@@ -84,10 +84,8 @@ void pipelineSimulation::tick(){
         }
         else { 
             printDebug("Pipeline is stalled, not scheduling new fetch event", 1);
-            stallTime--;
-            cpuInstance->state.executeState = "STALL";
             //scheduleEvent(new executeEvent(clk + 1.1));
-            if(stallTime <= 0) pipelineBusy = 0;
+            if(cpuInstance->stallTime <= 0) cpuInstance->pipelineBusy = 0;
         }
         clk++; //increment internal clock
     }
