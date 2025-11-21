@@ -39,6 +39,7 @@ int main(){
             tick0++;
         }
         memBus.tick(); //advance memory bus arbitration
+        //if(tick0 > 100){break;}
     }
 
     unsigned int cycles0 = tick0 / 10;
