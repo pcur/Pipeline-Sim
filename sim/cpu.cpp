@@ -196,7 +196,7 @@ void CpuSim::decode(){
             state.decodeState    = "STYPE";
             // S-type instruction decoding
             assemblyCode.imm     = (((instruction & 0xFE000000) >> 25) << 5) | ((instruction & 0x00000F80) >> 7);
-            assemblyCode.rs2     = (instruction & 0x01F00000) >> 20;
+            assemblyCode.rd      = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             // ALU control
@@ -218,6 +218,7 @@ void CpuSim::decode(){
             state.decodeState    = "STYPE-F";
             // S-type instruction decoding
             assemblyCode.imm     = (((instruction & 0xFE000000) >> 25) << 5) | ((instruction & 0x00000F80) >> 7);
+            assemblyCode.rd      = (instruction & 0x01F00000) >> 20;
             assemblyCode.rs1     = (instruction & 0x000F8000) >> 15;
             assemblyCode.funct3  = (instruction & 0x00007000) >> 12;
             // ALU control
@@ -243,7 +244,7 @@ void CpuSim::decode(){
             // ALU control
             assemblyCode.alucode = (assemblyCode.opcode << 3) + assemblyCode.funct3;             
             assemblyCode.pc_enable = 1;
-            assemblyCode.imm_sel = 1;
+            assemblyCode.imm_sel = 0;
             // Memory mux control
             assemblyCode.store_sel = 0;
             assemblyCode.mem_load_sel = 0;

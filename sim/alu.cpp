@@ -80,7 +80,6 @@ int CpuSim::alu(int reg1_val, int reg2_val, int function_code, int imm){
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "xs1: " + std::to_string(reg1_val) + ", xs2 " + std::to_string(reg2_val),1);
             if(reg1_val < reg2_val){
                 pc = instr_execute_pc + imm + FETCH_OFFSET;
-                shouldHalt = true;
                 flush();
             }
             
