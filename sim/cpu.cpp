@@ -366,13 +366,15 @@ void CpuSim::execute(){
 
     printDebug("Executing instruction in execute stage", 2);
     state.executeState = "NO_OP";
-    if(stallTime > 0) {
+    /*if(stallTime > 0) {
         state.executeState = "STALL";
-        stallTime--;
-        stallActive = false;
+        stallActive = true;
+        stallDone = true;
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
         return;
-    }
+    }*/
+    stallVal = 0;
+    stallActive = false;
     if(state.decodeState == "NO_OP"){return;}
     instrCt++;
     
@@ -411,6 +413,7 @@ void CpuSim::execute(){
                         default:
                             break;
                     }
+                    state.executeState = "STORE";
                     stallVal = MEMORY_STALL_VALUE;
                 }
                 else{
@@ -435,6 +438,7 @@ void CpuSim::execute(){
                             break;
                     }
                     printDebug("exeData.wb_int_val = " + std::to_string(exeData.wb_int_val),3);
+                    state.executeState = "LOAD";
                     stallVal = MEMORY_STALL_VALUE;
                 }
             }
@@ -460,6 +464,7 @@ void CpuSim::execute(){
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing FLOAT store operation", 2);
                     //STORE FUNCTION HERE
                     simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[assemblyCode.rs2]));
+                    state.executeState = "STORE";
                 }
                 else{
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing FLOAT load operation", 2);
@@ -468,6 +473,7 @@ void CpuSim::execute(){
                     bool load_success;
                     std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
                     exeData.wb_float_val = std::bit_cast<float>(data);
+                    state.executeState = "LOAD";
                 }
                 stallVal = MEMORY_STALL_VALUE;
             }
@@ -506,9 +512,10 @@ void CpuSim::execute(){
             printDebug("EXECUTE - " + temp_ss.str() + ": " + "ERR: Default case reached in execute stage", 0);
             break;
     }
-
-    if(!stallDone){
-        stallTime = stallVal;;
+    stallTime = stallVal;
+    /*if(!stallDone){
+        stallTime = stallVal;
+        stallActive = true;
     }
     else{
         stallVal = 0;
@@ -517,8 +524,7 @@ void CpuSim::execute(){
     if(stallVal > 0){
         pipelineBusy = true;
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "Stalling pipeline for " + std::to_string(stallVal) + " cycles", 1);
-    }
-    stallDone = false;
+    }*/
 }
 
 void CpuSim::store(){
