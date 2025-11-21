@@ -16,7 +16,7 @@ int main(){
     cpu1.initializeRegisters();
     // Load instruction queue from file and into memory
     printDebug("Setting up instruction queue", 1);
-    fill_queue("instructions/cpu0_instructions.txt", instrQ, 38);
+    fill_queue("instructions/cpu1_instructions.txt", instrQ, 38);
     load_mem_array(memBus, 0x0000, 0x0093, instrQ);
 
     //Filling memory array
@@ -36,7 +36,7 @@ int main(){
         if(!pipeline1.halted) pipeline1.tick();
         memBus.tick(); //advance memory bus arbitration
         loop++;
-        if(loop > 800){ //safety break
+        if(loop > 3000000){ //safety break
             printDebug("ERROR: Simulation loop exceeded 1000 cycles, forcing halt.", 0);
             pipeline1.halt();
         }
