@@ -54,6 +54,12 @@ void pipelineSimulation::tick(){
             printDebug("Processing event scheduled for time: " + std::to_string(eventQueue.top()->time), 5);
             // Process all events scheduled for this clock cycle in order of time
             event * nextEvent = eventQueue.top();
+            /*if(cpuInstance->pipelineBusy){
+                if(nextEvent->name == "decode" || nextEvent->name == "execute"){
+                    printDebug("Pipeline is busy, deferring event: " + nextEvent->name, 2);
+                    break;
+                }
+            }*/
             nextEvent->processEvent();
             if(halted) break;
             //may need stall logic here
@@ -72,22 +78,21 @@ void pipelineSimulation::tick(){
         halt();
     }
     else{
-        if(stallTime > 0) {
-            pipelineBusy = 1;
-            printDebug("Pipeline is stalled for " + std::to_string(stallTime) + " more cycles", 1);
-        }
-        if(notStalled()){
-            if (clk % 10 == 9){ // only schedule fence once per cpu cycle{}
-            scheduleEvent(new fetchEvent(clk + 10, this));
-            printDebug("Pipeline is not stalled, scheduling new fetch event", 1);
-        }
-        }
-        else { 
-            printDebug("Pipeline is stalled, not scheduling new fetch event", 1);
-            stallTime--;
-            cpuInstance->state.executeState = "STALL";
+        if(cpuInstance->stallTime > 0) {
+            printDebug("Pipeline is stalled for " + std::to_string(cpuInstance->stallTime) + " more cycles", 1);
+            cpuInstance->stallTime--;
+            if(cpuInstance->stallTime > 0){
+                cpuInstance->state.executeState = "STALLED FOR: " + std::to_string(cpuInstance->stallTime + 5) + " CYCLES";
+            }
+            else cpuInstance->state.executeState = cpuInstance->stalledState;
             //scheduleEvent(new executeEvent(clk + 1.1));
-            if(stallTime <= 0) pipelineBusy = 0;
+            if(cpuInstance->stallTime == 0) cpuInstance->pipelineBusy = 0;
+        }
+        else {
+            if (clk % 10 == 9){ // only schedule fence once per cpu cycle{}
+                scheduleEvent(new fetchEvent(clk + 10, this));
+                printDebug("Pipeline is not stalled, scheduling new fetch event", 1);
+            }
         }
         clk++; //increment internal clock
     }
@@ -103,22 +108,22 @@ void pipelineSimulation::run(){
 void fetchEvent::processEvent(){
     printDebug("Processing fetch event at time: " + std::to_string(pipelineSim->clk), 3);
     pipelineSim->cpuInstance->fetch();
-    printDebug("Scheduling decode event at tick " + std::to_string(pipelineSim->clk + 8 + pipelineSim->cpuInstance->stallTime), 4);
-    pipelineSim->scheduleEvent(new decodeEvent(pipelineSim->clk + 8 + pipelineSim->cpuInstance->stallTime, pipelineSim));
+    printDebug("Scheduling decode event at tick " + std::to_string(pipelineSim->clk + 8 + pipelineSim->cpuInstance->totalStallTime), 4);
+    pipelineSim->scheduleEvent(new decodeEvent(pipelineSim->clk + 8 + pipelineSim->cpuInstance->totalStallTime, pipelineSim));
 }
 
 void decodeEvent::processEvent(){
     printDebug("Processing decode event at time: " + std::to_string(pipelineSim->clk), 3);
     pipelineSim->cpuInstance->decode();
-    printDebug("Scheduling execute event at tick " + std::to_string(pipelineSim->clk + 8 + pipelineSim->cpuInstance->stallTime), 4);
-    pipelineSim->scheduleEvent(new executeEvent(pipelineSim->clk + 8 + pipelineSim->cpuInstance->stallTime, pipelineSim));
+    printDebug("Scheduling execute event at tick " + std::to_string(pipelineSim->clk + 8 + pipelineSim->cpuInstance->totalStallTime), 4);
+    pipelineSim->scheduleEvent(new executeEvent(pipelineSim->clk + 8 + pipelineSim->cpuInstance->totalStallTime, pipelineSim));
 }
 
 void executeEvent::processEvent(){
     printDebug("Processing execute event at time: " + std::to_string(pipelineSim->clk), 3);
     pipelineSim->cpuInstance->execute();
     printDebug("Scheduling store event at tick " + std::to_string(pipelineSim->clk + 8), 4);
-    pipelineSim->scheduleEvent(new storeEvent(pipelineSim->clk + 8, pipelineSim));
+    pipelineSim->scheduleEvent(new storeEvent(pipelineSim->clk + 8 + pipelineSim->cpuInstance->totalStallTime, pipelineSim));
 }
 
 void storeEvent::processEvent(){

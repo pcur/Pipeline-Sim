@@ -123,7 +123,7 @@ void MemoryBus::lock(uint8_t bank, bool readLatency){
         }
     }
     else {
-        if (STORE_LATENCY > 0){ ticks_until_free[bank] = LOAD_LATENCY;}
+        if (STORE_LATENCY > 0){ ticks_until_free[bank] = STORE_LATENCY;}
         else {
             unlock(bank);
             printDebug("Bank " + std::to_string(bank) +" not locking due to no store latency set.", 1);

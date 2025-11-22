@@ -30,6 +30,8 @@
 #define HalfWord    16
 #define Word        32
 
+#define FLOAT_LATENCY 50
+
 struct riscvInstr{
     // RISC-V instruction fields
     uint32_t opcode;
@@ -91,12 +93,15 @@ class CpuSim {
         pipelineState   state;
         uint32_t        instruction;
         uint32_t        jumpval;
-        uint32_t        stallTime;
+        uint32_t        stallTime = 0;
+        uint32_t        totalStallTime = 0;
         bool            pipelineBusy;
         bool            shouldHalt = false;
         float           scalar;
+        std::string     stalledState = "";
         unsigned int    array[160];
         riscvInstr      assemblyCode;
+        riscvInstr      executionCode;
         executeData     exeData;
         uint32_t int_reg_bank[32] = {0,0, };
         float   float_reg_bank[32];

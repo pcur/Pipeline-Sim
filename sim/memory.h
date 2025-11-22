@@ -4,8 +4,8 @@
 #include <tuple>
 #include "../sim/helpers.h"
 
-#define LOAD_LATENCY 0 //in ticks
-#define STORE_LATENCY 0 //in ticks
+#define LOAD_LATENCY 20 //in ticks
+#define STORE_LATENCY 20 //in ticks
 #define MEM_SIZE 1024
 
 // Size specifiers for dynamic store/load (in bits)
