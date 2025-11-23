@@ -49,6 +49,7 @@ static inline int32_t signExtend(uint32_t value, int bits) {
 void CpuSim::fetch(){
     std::stringstream hexpc;
     hexpc << std::hex << std::showbase << pc;
+    if(!memory_success) return;
     printDebug("Fetching instruction at PC: " + hexpc.str(), 2);
     
     // Don't fetch if halt has been signaled
@@ -70,6 +71,7 @@ void CpuSim::fetch(){
 
 void CpuSim::decode(){
     printDebug("Decoding instruction: 0x" + std::to_string(instruction), 2);
+    if(!memory_success) return;
     decodeInit();
     assemblyCode.opcode = instruction & 0x7F;
     std::stringstream temp_ss;
@@ -410,7 +412,7 @@ void CpuSim::execute(){
                             break;
                     }
                     if(!memory_success){
-                        totalStallTime = 10;
+                        totalStallTime = ARBITRATOR_LATENCY;
                     }
                     else totalStallTime = MEMORY_LATENCY;
                 }
@@ -437,7 +439,7 @@ void CpuSim::execute(){
                     }
                     printDebug("exeData.wb_int_val = " + std::to_string(exeData.wb_int_val),3);
                     if (!memory_success){
-                        totalStallTime = 10;
+                        totalStallTime = ARBITRATOR_LATENCY;
                     }
                     else totalStallTime = MEMORY_LATENCY;
                 }
@@ -467,7 +469,7 @@ void CpuSim::execute(){
                     state.executeState = "STORE-F";
                     memory_success = simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[executionCode.rs2]));
                     if (!memory_success){
-                        totalStallTime = 10;
+                        totalStallTime = ARBITRATOR_LATENCY;
                     }
                     else totalStallTime = MEMORY_LATENCY;
                 }
@@ -479,7 +481,7 @@ void CpuSim::execute(){
                     std::tie(data, memory_success) = simMemory.tryLoadWord(int_alu_val);
                     exeData.wb_float_val = std::bit_cast<float>(data);
                     if(!memory_success){
-                        totalStallTime = 10;
+                        totalStallTime = ARBITRATOR_LATENCY;
                     }
                     else totalStallTime = MEMORY_LATENCY;
                 }

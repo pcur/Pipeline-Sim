@@ -30,6 +30,7 @@
 #define HalfWord    16
 #define Word        32
 
+#define ARBITRATOR_LATENCY 10
 #define MEMORY_LATENCY 20
 #define FLOAT_LATENCY 50
 
