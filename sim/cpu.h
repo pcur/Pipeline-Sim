@@ -30,6 +30,7 @@
 #define HalfWord    16
 #define Word        32
 
+#define MEMORY_LATENCY 20
 #define FLOAT_LATENCY 50
 
 struct riscvInstr{
@@ -97,6 +98,7 @@ class CpuSim {
         uint32_t        totalStallTime = 0;
         bool            pipelineBusy;
         bool            shouldHalt = false;
+        bool            memory_success = true;
         float           scalar;
         std::string     stalledState = "";
         unsigned int    array[160];

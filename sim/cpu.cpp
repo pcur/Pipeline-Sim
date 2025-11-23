@@ -350,20 +350,25 @@ void CpuSim::execute(){
     // Check if the instruction's fetch PC - offset == 0x094 (halt condition)
     std::stringstream temp_ss;
     temp_ss << std::hex << std::showbase << instr_execute_pc;
-    executionCode = assemblyCode; //save current instruction for potential stalls
+    if(memory_success == true){
+            executionCode = assemblyCode; //pass the next set of instructions needed to be run
+    }
+    else{
+        memory_success = true; //reset for next time
+    }
     if((instr_execute_pc - pc_offset) >= 0x094){
         printDebug("Halt condition reached (instruction fetch PC offset = 0x94), initiating shutdown", 0);
         shouldHalt = true;
     }
 
     printDebug("Executing instruction in execute stage", 2);
-    /*state.executeState = "NO_OP";
+    state.executeState = "NO_OP";
     if(pipelineBusy) {
         state.executeState = "STALL";
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
         return;
     }
-    if(state.decodeState == "NO_OP"){return;}*/
+    //if(state.decodeState == "NO_OP"){return;}
     instrCt++;
     
     float float_alu_val;
@@ -384,57 +389,57 @@ void CpuSim::execute(){
                 exeData.alu_val2 = int_reg_bank[executionCode.rs2];
             }
             int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, executionCode.alucode, executionCode.imm);
-            if(assemblyCode.store_sel){
+            if(executionCode.store_sel){
                 printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is enabled", 3);
                 // Store stuff goes here
-                if(assemblyCode.rw_enable){ // rw_enable high means store 
+                if(executionCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing store operation", 2);
                     //STORE FUNCTION HERE
-                    bool store_success;
                     state.executeState = "STORE";
                     switch(executionCode.bit_len){
                         case Byte:
-                            store_success = simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[executionCode.rs2] << (32 - executionCode.bit_len)) >> (32 - executionCode.bit_len));
+                            memory_success = simMemory.tryStoreByte(int_alu_val, uint8_t(int_reg_bank[executionCode.rs2] << (32 - executionCode.bit_len)) >> (32 - executionCode.bit_len));
                             break;
                         case HalfWord:
-                            store_success = simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[executionCode.rs2] << (32 - executionCode.bit_len)) >> (32 - executionCode.bit_len));
+                            memory_success = simMemory.tryStoreHalfWord(int_alu_val, uint16_t(int_reg_bank[executionCode.rs2] << (32 - executionCode.bit_len)) >> (32 - executionCode.bit_len));
                             break;
                         case Word:
-                            store_success = simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[executionCode.rs2] << (32 - executionCode.bit_len)) >> (32 - executionCode.bit_len));
+                            memory_success = simMemory.tryStoreWord(int_alu_val, uint32_t(int_reg_bank[executionCode.rs2] << (32 - executionCode.bit_len)) >> (32 - executionCode.bit_len));
                             break;
                         default:
                             break;
                     }
-                    if(!store_success){
+                    if(!memory_success){
                         totalStallTime = 10;
                     }
+                    else totalStallTime = MEMORY_LATENCY;
                 }
                 else{
                     //LOAD FUNCTION HERE
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing load operation", 2);
-                    bool load_success;
                     unsigned int data;
                     state.executeState = "LOAD";
                     switch(executionCode.bit_len){
                         case Byte:
-                            std::tie(data, load_success) = simMemory.tryLoadByte(int_alu_val);
+                            std::tie(data, memory_success) = simMemory.tryLoadByte(int_alu_val);
                             exeData.wb_int_val = data;
                             break;
                         case HalfWord:
-                            std::tie(data, load_success) = simMemory.tryLoadHalfWord(int_alu_val);
+                            std::tie(data, memory_success) = simMemory.tryLoadHalfWord(int_alu_val);
                             exeData.wb_int_val = data;
                             break;
                         case Word:
-                            std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
+                            std::tie(data, memory_success) = simMemory.tryLoadWord(int_alu_val);
                             exeData.wb_int_val = data;
                             break;
                         default:
                             break;
                     }
                     printDebug("exeData.wb_int_val = " + std::to_string(exeData.wb_int_val),3);
-                    if (!load_success){
+                    if (!memory_success){
                         totalStallTime = 10;
                     }
+                    else totalStallTime = MEMORY_LATENCY;
                 }
             }
             else{
@@ -453,29 +458,30 @@ void CpuSim::execute(){
             exeData.alu_val1 = int_reg_bank[executionCode.rs1];
             exeData.alu_val2 = executionCode.imm;
             int_alu_val = alu(exeData.alu_val1, exeData.alu_val2, executionCode.alucode, executionCode.imm);
-            if(assemblyCode.store_sel){
+            if(executionCode.store_sel){
                 printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store select is enabled for FLOAT operation", 3);
                 // Store stuff goes here
-                if(assemblyCode.rw_enable){ // rw_enable high means store 
+                if(executionCode.rw_enable){ // rw_enable high means store 
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is high, performing FLOAT store operation", 2);
                     //STORE FUNCTION HERE
                     state.executeState = "STORE-F";
-                    bool store_success = simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[executionCode.rs2]));
-                    if (!store_success){
+                    memory_success = simMemory.tryStoreWord(int_alu_val, std::bit_cast<uint32_t>(float_reg_bank[executionCode.rs2]));
+                    if (!memory_success){
                         totalStallTime = 10;
                     }
+                    else totalStallTime = MEMORY_LATENCY;
                 }
                 else{
                     printDebug("EXECUTE - " + temp_ss.str() + ": " + "Store enable is low, performing FLOAT load operation", 2);
                     //LOAD FUNCTION HERE
                     float data;
-                    bool load_success;
                     state.executeState = "LOAD-F";
-                    std::tie(data, load_success) = simMemory.tryLoadWord(int_alu_val);
+                    std::tie(data, memory_success) = simMemory.tryLoadWord(int_alu_val);
                     exeData.wb_float_val = std::bit_cast<float>(data);
-                    if(!load_success){
+                    if(!memory_success){
                         totalStallTime = 10;
                     }
+                    else totalStallTime = MEMORY_LATENCY;
                 }
             }
             else{

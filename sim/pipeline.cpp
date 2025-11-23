@@ -50,21 +50,30 @@ void pipelineSimulation::tick(){
     if (clk % 10 == 0){
         endCyclePrintOut();
     }
-    while(eventQueue.top()->time <= clk) {
-            printDebug("Processing event scheduled for time: " + std::to_string(eventQueue.top()->time), 5);
-            // Process all events scheduled for this clock cycle in order of time
-            event * nextEvent = eventQueue.top();
-            /*if(cpuInstance->pipelineBusy){
-                if(nextEvent->name == "decode" || nextEvent->name == "execute"){
-                    printDebug("Pipeline is busy, deferring event: " + nextEvent->name, 2);
-                    break;
+    while(!eventQueue.empty() && eventQueue.top()->time <= clk) {
+            event * nextEvent = eventQueue.top(); //Peek at next event
+            printDebug("Processing event scheduled for time: " + std::to_string(nextEvent->time), 5);
+            if(cpuInstance->pipelineBusy){
+                // Remove and reschedule for next cycle
+                eventQueue.pop();
+                if(nextEvent->name == "fetch" || nextEvent->name == "decode"){
+                    nextEvent->processEvent();
+                    delete nextEvent;
                 }
-            }*/
-            nextEvent->processEvent();
-            if(halted) break;
-            //may need stall logic here
-            eventQueue.pop();
-            delete nextEvent;
+                else{
+                    event* rescheduled = nextEvent->cloneWithTime(nextEvent->time + 10);
+                    scheduleEvent(rescheduled);
+                    delete nextEvent;
+                }
+                break; //If stalled, break out and wait for next tick
+            }
+            else{
+                // Pop and process
+                eventQueue.pop();
+                nextEvent->processEvent();
+                if(halted) { delete nextEvent; break; }
+                delete nextEvent;
+            }
     }
     if(halted || cpuInstance->shouldHalt){
         cpuInstance->state.fetchState = "HALTED";
@@ -81,10 +90,7 @@ void pipelineSimulation::tick(){
         if(cpuInstance->stallTime > 0) {
             printDebug("Pipeline is stalled for " + std::to_string(cpuInstance->stallTime) + " more cycles", 1);
             cpuInstance->stallTime--;
-            if(cpuInstance->stallTime > 0){
-                cpuInstance->state.executeState = "STALLED FOR: " + std::to_string(cpuInstance->stallTime + 5) + " CYCLES";
-            }
-            else cpuInstance->state.executeState = cpuInstance->stalledState;
+            cpuInstance->state.executeState = "STALLED FOR: " + std::to_string(cpuInstance->stallTime + 5) + " CYCLES";
             //scheduleEvent(new executeEvent(clk + 1.1));
             if(cpuInstance->stallTime == 0) cpuInstance->pipelineBusy = 0;
         }
@@ -146,3 +152,9 @@ void hazardEvent::processEvent(){
     //add hazard detection logic here
     //empty now but can handle stalls and maybe noops if needed
 }
+// cloneWithTime implementations for rescheduling events
+event* fetchEvent::cloneWithTime(uint32_t t) const { return new fetchEvent(t, this->pipelineSim); }
+event* decodeEvent::cloneWithTime(uint32_t t) const { return new decodeEvent(t, this->pipelineSim); }
+event* executeEvent::cloneWithTime(uint32_t t) const { return new executeEvent(t, this->pipelineSim); }
+event* storeEvent::cloneWithTime(uint32_t t) const { return new storeEvent(t, this->pipelineSim); }
+event* hazardEvent::cloneWithTime(uint32_t t) const { return new hazardEvent(t, this->pipelineSim); }

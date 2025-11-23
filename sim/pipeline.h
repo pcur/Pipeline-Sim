@@ -22,6 +22,9 @@ class event {
     pipelineSimulation* pipelineSim;
     const uint32_t time;
     std::string name;
+    // Create a copy of this event with a different scheduled time.
+    // Implemented by each derived event to allow rescheduling without mutating `time`.
+    virtual event* cloneWithTime(uint32_t t) const = 0;
 };
 
 struct eventComparator {
@@ -62,29 +65,34 @@ class pipelineSimulation : public simulation {
 class fetchEvent : public event {
     public:
         fetchEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "fetch", pipelineSim){}
+        event* cloneWithTime(uint32_t t) const;
         void processEvent();
 };
 
 class decodeEvent : public event {
     public:
         decodeEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "decode", pipelineSim){}
+        event* cloneWithTime(uint32_t t) const;
         void processEvent();
 };
 
 class executeEvent : public event {
     public:
         executeEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "execute", pipelineSim){}
+        event* cloneWithTime(uint32_t t) const;
         void processEvent();
 };
 
 class storeEvent : public event {
     public:
         storeEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "store", pipelineSim){}
+        event* cloneWithTime(uint32_t t) const;
         void processEvent();
 };
 
 class hazardEvent : public event {
     public:
         hazardEvent(uint32_t t, pipelineSimulation* pipelineSim) : event(t, "hazard", pipelineSim){}
+        event* cloneWithTime(uint32_t t) const;
         void processEvent();
 };
