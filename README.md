@@ -29,9 +29,10 @@ Joshua Kauffman, Team Member
 - Translation of instructions from C or Asm to binaries
 - Testing & debugging
 - Presenting Demos
+- PipelineSim Stall functionality
 
 Matthew Montano, Team Member
 - Presentation of Ice Cream Sim
-- PipelineSim stalls
+- literally nothing else
 
 Specific contribution history (commits) can also be found on the github.
