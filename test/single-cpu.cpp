@@ -46,7 +46,7 @@ int main(){
     unsigned int instructionCt0 = cpu0.instrCt;
     printDebug("Instructions: " + std::to_string(instructionCt0), 1);
     float calculated_cpi0 = static_cast<float>(cycles0) / static_cast<float>(instructionCt0);
-    printDebug("CPU simulation complete.", 0);
+    printDebug("Single CPU simulation complete.", 0);
     printDebug("CPU0 CPI: " + std::to_string(calculated_cpi0), 0);
     return 0;
 }

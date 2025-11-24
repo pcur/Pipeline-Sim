@@ -370,8 +370,8 @@ void CpuSim::execute(){
         printDebug("EXECUTE - " + temp_ss.str() + ": " + "pipeline is busy, stalling execute stage", 1);
         return;
     }
-    //if(state.decodeState == "NO_OP"){return;}
-    instrCt++;
+    if(state.decodeState != "NO_OP"){instrCt++;}
+
     
     float float_alu_val;
     int int_alu_val;  
@@ -526,6 +526,7 @@ void CpuSim::execute(){
     if(totalStallTime > 0){
         stalledState = state.executeState;
         pipelineBusy = true;
+        //instrCt--;
     }
     stallTime = totalStallTime;
 }

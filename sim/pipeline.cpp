@@ -65,6 +65,7 @@ void pipelineSimulation::tick(){
                     scheduleEvent(rescheduled);
                     delete nextEvent;
                 }
+               // cpuInstance->instrCt--;
                 break; //If stalled, break out and wait for next tick
             }
             else{
